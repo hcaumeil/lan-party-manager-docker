@@ -1,0 +1,30 @@
+syntax = "proto3";
+package agent;
+
+service Router {
+  rpc Ping (PingRequest) returns (AgentResponse);
+  rpc Send (RouterRequest) returns (AgentResponse);
+}
+
+message PingRequest {
+  string body = 1;
+}
+
+message User {
+  oneof kind {
+    string mac = 1;
+    string ip4 = 2;
+    bool internet = 3;
+    int64 user = 4;
+  }
+}
+
+message RouterRequest {
+  string action = 1;
+  User user = 2;  
+}
+
+message AgentResponse {
+  bool success = 1;
+  string body = 2;
+}
