@@ -23,6 +23,7 @@ pub struct User {
     email: String,
     password: String,
     tel: String,
+    role: String,
     is_allowed: bool,
 }
 
@@ -34,6 +35,7 @@ impl User {
         email: String,
         password: String,
         tel: String,
+        role: String,
     ) -> Self {
         Self {
             username,
@@ -42,6 +44,7 @@ impl User {
             email,
             password,
             tel,
+            role,
             is_allowed: false,
         }
     }

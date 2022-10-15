@@ -11,6 +11,14 @@ pub async fn session_get(id: i32, handler: DbHandler) -> Result<impl warp::Reply
     Ok(warp::reply())
 }
 
+pub async fn users_get(handler: DbHandler) -> Result<impl warp::Reply, warp::Rejection> {
+    Ok(warp::reply())
+}
+
+pub async fn user_get(id: i32, handler: DbHandler) -> Result<impl warp::Reply, warp::Rejection> {
+    Ok(warp::reply())
+}
+
 fn with_handler(
     handler: DbHandler,
 ) -> impl Filter<Extract = (DbHandler,), Error = Infallible> + Clone {
@@ -26,10 +34,27 @@ pub fn sessions_routes(
         .and_then(sessions_get);
 
     let get = warp::get()
-        .and(warp::path("session"))
+        .and(warp::path("sessions"))
         .and(warp::path::param())
         .and(with_handler(handler))
         .and_then(session_get);
+
+    list.or(get)
+}
+
+pub fn users_routes(
+    handler: DbHandler,
+) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
+    let list = warp::get()
+        .and(warp::path("users"))
+        .and(with_handler(handler.clone()))
+        .and_then(users_get);
+
+    let get = warp::get()
+        .and(warp::path("users"))
+        .and(warp::path::param())
+        .and(with_handler(handler))
+        .and_then(user_get);
 
     list.or(get)
 }
