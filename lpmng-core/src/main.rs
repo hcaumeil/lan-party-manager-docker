@@ -1,4 +1,5 @@
 mod api;
+mod db;
 
 use std::path::Path;
 use warp::{self, Filter, Rejection, Reply};
@@ -14,6 +15,8 @@ fn public_route() -> impl Filter<Extract = impl Reply, Error = Rejection> + Clon
 
 #[tokio::main]
 async fn main() {
+    db::DbHandler::connect().await.unwrap();
+    println!("[INFO] database successfully connected");
     warp::serve(public_route())
         .run(([127, 0, 0, 1], 3030))
         .await;
