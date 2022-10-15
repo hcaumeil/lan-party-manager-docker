@@ -2,23 +2,16 @@ mod api;
 mod db;
 mod models;
 
-use std::path::Path;
-use warp::{self, Filter, Rejection, Reply};
-
-fn public_route() -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
-    assert!(
-        Path::new("./src/public/").exists(),
-        "[ASSERTION] unable to find the static html directory"
-    );
-
-    warp::get().and(warp::fs::dir("./src/public/"))
-}
+use api::{api_routes, public_route};
+use warp::Filter;
 
 #[tokio::main]
 async fn main() {
-    db::DbHandler::connect().await.unwrap();
+    let db_handler = db::DbHandler::connect().await.unwrap();
     println!("[INFO] database successfully connected");
-    warp::serve(public_route())
+
+    println!("[INFO] http server starting...");
+    warp::serve(public_route().or(api_routes(db_handler)))
         .run(([127, 0, 0, 1], 3030))
         .await;
 }
