@@ -1,5 +1,6 @@
 mod api;
 mod db;
+mod models;
 
 use std::path::Path;
 use warp::{self, Filter, Rejection, Reply};
