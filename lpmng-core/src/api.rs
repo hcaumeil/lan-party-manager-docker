@@ -20,15 +20,23 @@ pub async fn users_get(handler: DbHandler) -> Result<impl warp::Reply, warp::Rej
     }
 }
 
-pub async fn user_get(id: i32, handler: DbHandler) -> Result<impl warp::Reply, warp::Rejection> {
-    Ok(warp::reply())
+pub async fn user_get(id: u128, handler: DbHandler) -> Result<impl warp::Reply, warp::Rejection> {
+    let res = handler.get_user(id).await;
+
+    match res {
+        Some(json) => Ok(warp::reply::json(&json)),
+        None => Err(warp::reject()),
+    }
 }
 
-pub async fn user_register(
+pub async fn user_post(
     user: User,
     handler: DbHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    let res = handler.insert_user(user).await;
+    let res = match user.id {
+        Some(_) => false,
+        None => handler.insert_user(user).await,
+    };
 
     if res {
         Ok(warp::reply())
@@ -74,13 +82,13 @@ pub fn users_routes(
         .and(with_handler(handler.clone()))
         .and_then(user_get);
 
-    let register = warp::post()
+    let post = warp::post()
         .and(warp::path("users"))
         .and(warp::body::json())
         .and(with_handler(handler))
-        .and_then(user_register);
+        .and_then(user_post);
 
-    list.or(get).or(register)
+    get.or(list).or(post)
 }
 
 pub fn api_routes(

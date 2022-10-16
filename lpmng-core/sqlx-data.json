@@ -19,6 +19,74 @@
     },
     "query": "\nINSERT INTO users (username, firstname, lastname, email, password, phone, role, is_allowed)\nVALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n        "
   },
+  "4ab9d4d5ebe3c2b41cd8c33ab7f814574451d0ed60927a289a3ab747ee8e8f03": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "username",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "firstname",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "lastname",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "email",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "password",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "phone",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "role",
+          "ordinal": 7,
+          "type_info": "Text"
+        },
+        {
+          "name": "is_allowed",
+          "ordinal": 8,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                SELECT * FROM users\n                WHERE id=$1\n            "
+  },
   "a394bbe93ed880cd8d56fb3c71aaae19da5b3b150d75f7daa7b8b5ed0bc099f8": {
     "describe": {
       "columns": [

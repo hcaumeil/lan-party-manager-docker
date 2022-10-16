@@ -1,5 +1,6 @@
 use crate::models::{Session, User};
 use sqlx::postgres::PgPoolOptions;
+use sqlx::types::Uuid;
 use sqlx::{Error, PgPool, Postgres, Transaction};
 
 #[derive(Clone, Debug)]
@@ -59,6 +60,33 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         };
     }
 
+    pub async fn get_user(&self, id: u128) -> Option<User> {
+        return match sqlx::query!(
+            r#"
+                SELECT * FROM users
+                WHERE id=$1
+            "#,
+            Uuid::from_u128(id)
+        )
+        .fetch_one(&self.pool)
+        .await
+        {
+            Ok(x) => Some(User {
+                id: Some(x.id.as_u128()),
+                username: x.username.to_string(),
+                firstname: x.firstname.to_string(),
+                lastname: x.lastname.to_string(),
+                email: x.email.to_string(),
+                password: x.password.to_string(),
+                phone: x.phone.to_string(),
+                role: x.role.to_string(),
+                is_allowed: x.is_allowed,
+            }),
+
+            Err(_) => None,
+        };
+    }
+
     pub async fn get_users(&self) -> Option<Vec<User>> {
         let mut res: Vec<User> = Vec::new();
 
@@ -73,6 +101,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             Ok(q) => {
                 for x in &q {
                     res.push(User {
+                        id: Some(x.id.as_u128()),
                         username: x.username.to_string(),
                         firstname: x.firstname.to_string(),
                         lastname: x.lastname.to_string(),

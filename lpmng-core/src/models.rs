@@ -21,6 +21,7 @@ impl Session {
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
+    pub id: Option<u128>,
     pub username: String,
     pub firstname: String,
     pub lastname: String,
@@ -42,6 +43,7 @@ impl User {
         role: String,
     ) -> Self {
         Self {
+            id: None,
             username,
             firstname,
             lastname,
