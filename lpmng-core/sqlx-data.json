@@ -1,0 +1,88 @@
+{
+  "db": "PostgreSQL",
+  "3d238ffaf7c813e1e104606e5ff2a633a2bb718b59442a1130905c5b09eaeb09": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Bool"
+        ]
+      }
+    },
+    "query": "\nINSERT INTO users (username, firstname, lastname, email, password, phone, role, is_allowed)\nVALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n        "
+  },
+  "a394bbe93ed880cd8d56fb3c71aaae19da5b3b150d75f7daa7b8b5ed0bc099f8": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "username",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "firstname",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "lastname",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "email",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "password",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "phone",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "role",
+          "ordinal": 7,
+          "type_info": "Text"
+        },
+        {
+          "name": "is_allowed",
+          "ordinal": 8,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "\n                SELECT * FROM users\n            "
+  }
+}

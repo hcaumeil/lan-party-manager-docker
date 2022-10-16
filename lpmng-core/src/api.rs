@@ -1,7 +1,7 @@
 use std::{convert::Infallible, path::Path};
 use warp::{self, Filter, Rejection, Reply};
 
-use crate::db::DbHandler;
+use crate::{db::DbHandler, models::User};
 
 pub async fn sessions_get(handler: DbHandler) -> Result<impl warp::Reply, warp::Rejection> {
     Ok(warp::reply())
@@ -12,11 +12,29 @@ pub async fn session_get(id: i32, handler: DbHandler) -> Result<impl warp::Reply
 }
 
 pub async fn users_get(handler: DbHandler) -> Result<impl warp::Reply, warp::Rejection> {
-    Ok(warp::reply())
+    let res = handler.get_users().await;
+
+    match res {
+        Some(json) => Ok(warp::reply::json(&json)),
+        None => Err(warp::reject()),
+    }
 }
 
 pub async fn user_get(id: i32, handler: DbHandler) -> Result<impl warp::Reply, warp::Rejection> {
     Ok(warp::reply())
+}
+
+pub async fn user_register(
+    user: User,
+    handler: DbHandler,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let res = handler.insert_user(user).await;
+
+    if res {
+        Ok(warp::reply())
+    } else {
+        Err(warp::reject())
+    }
 }
 
 fn with_handler(
@@ -53,16 +71,22 @@ pub fn users_routes(
     let get = warp::get()
         .and(warp::path("users"))
         .and(warp::path::param())
-        .and(with_handler(handler))
+        .and(with_handler(handler.clone()))
         .and_then(user_get);
 
-    list.or(get)
+    let register = warp::post()
+        .and(warp::path("users"))
+        .and(warp::body::json())
+        .and(with_handler(handler))
+        .and_then(user_register);
+
+    list.or(get).or(register)
 }
 
 pub fn api_routes(
     handler: DbHandler,
 ) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
-    sessions_routes(handler)
+    sessions_routes(handler.clone()).or(users_routes(handler))
 }
 
 pub fn public_route() -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {

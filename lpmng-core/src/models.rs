@@ -1,3 +1,6 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
 pub struct Session {
     ip4: String,
     mac: String,
@@ -16,34 +19,35 @@ impl Session {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct User {
-    username: String,
-    first_name: String,
-    last_name: String,
-    email: String,
-    password: String,
-    tel: String,
-    role: String,
-    is_allowed: bool,
+    pub username: String,
+    pub firstname: String,
+    pub lastname: String,
+    pub email: String,
+    pub password: String,
+    pub phone: String,
+    pub role: String,
+    pub is_allowed: bool,
 }
 
 impl User {
     pub fn new(
         username: String,
-        first_name: String,
-        last_name: String,
+        firstname: String,
+        lastname: String,
         email: String,
         password: String,
-        tel: String,
+        phone: String,
         role: String,
     ) -> Self {
         Self {
             username,
-            first_name,
-            last_name,
+            firstname,
+            lastname,
             email,
             password,
-            tel,
+            phone,
             role,
             is_allowed: false,
         }
