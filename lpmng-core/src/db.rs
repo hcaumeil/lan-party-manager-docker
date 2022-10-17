@@ -116,7 +116,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         .fetch_one(&self.pool)
         .await
         {
-            Ok(x) => check_hash(password, x),
+            Ok(x) => check_hash(password, x.password.to_string()),
             Err(_) => false,
         };
     }

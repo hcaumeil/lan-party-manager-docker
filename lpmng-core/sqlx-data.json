@@ -172,5 +172,73 @@
       }
     },
     "query": "\n                SELECT * FROM users\n            "
+  },
+  "a5cb84754aa804e762cf70a876c579e709a45fb26b4d04e9725a40530504a669": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "username",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "firstname",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "lastname",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "email",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "password",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "phone",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "role",
+          "ordinal": 7,
+          "type_info": "Text"
+        },
+        {
+          "name": "is_allowed",
+          "ordinal": 8,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n                SELECT * FROM users\n                WHERE username=$1\n            "
   }
 }
