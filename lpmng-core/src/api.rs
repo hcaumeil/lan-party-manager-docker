@@ -14,14 +14,15 @@ pub async fn login_post(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     if let Some(login) = json.get("login") {
         if let Some(password) = json.get("password") {
-            if handler
-                .check_password(
+            let role = handler
+            .check_password(
                     login.as_str().unwrap().into(),
-                    password.as_str().unwrap().into(),
-                )
-                .await
+            password.as_str().unwrap().into(),
+            )
+            .await;
+            if role.is_some()
             {
-                return Ok(warp::reply::json(&"dd"));
+                return Ok(warp::reply::json(&role.expect("Can't be null")));
             } else {
                 return Err(warp::reject());
             }

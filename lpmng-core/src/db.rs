@@ -105,10 +105,10 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         };
     }
 
-    pub async fn check_password(&self, login: String, password: String) -> bool {
+    pub async fn check_password(&self, login: String, password: String) -> Option<String> {
         return match sqlx::query!(
             r#"
-                SELECT * FROM users
+                SELECT password, role FROM users
                 WHERE username=$1
             "#,
             login
@@ -116,8 +116,8 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         .fetch_one(&self.pool)
         .await
         {
-            Ok(x) => check_hash(password, x.password.to_string()),
-            Err(_) => false,
+            Ok(x) => if check_hash(password, x.password.to_string()) {Some(x.role.to_string())} else {None},
+            Err(_) => None,
         };
     }
 

@@ -20,6 +20,32 @@
     },
     "query": "\n            UPDATE users\n            SET username = $1,\n            firstname = $2,\n            lastname = $3,\n            email = $4,\n            password = $5,\n            phone = $6,\n            role = $7 ,\n            is_allowed = $8\n            WHERE id=$9\n        "
   },
+  "3ba67038472975b78ceca2511e732bad1ba4735fb5f0670ff30a64aaffd3d2f8": {
+    "describe": {
+      "columns": [
+        {
+          "name": "password",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "role",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n                SELECT password, role FROM users\n                WHERE username=$1\n            "
+  },
   "3d238ffaf7c813e1e104606e5ff2a633a2bb718b59442a1130905c5b09eaeb09": {
     "describe": {
       "columns": [],
@@ -172,73 +198,5 @@
       }
     },
     "query": "\n                SELECT * FROM users\n            "
-  },
-  "a5cb84754aa804e762cf70a876c579e709a45fb26b4d04e9725a40530504a669": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "username",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "firstname",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "lastname",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "email",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "password",
-          "ordinal": 5,
-          "type_info": "Text"
-        },
-        {
-          "name": "phone",
-          "ordinal": 6,
-          "type_info": "Text"
-        },
-        {
-          "name": "role",
-          "ordinal": 7,
-          "type_info": "Text"
-        },
-        {
-          "name": "is_allowed",
-          "ordinal": 8,
-          "type_info": "Bool"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      }
-    },
-    "query": "\n                SELECT * FROM users\n                WHERE username=$1\n            "
   }
 }
