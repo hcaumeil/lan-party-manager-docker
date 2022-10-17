@@ -94,7 +94,7 @@ pub fn users_routes(
 pub fn api_routes(
     handler: DbHandler,
 ) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
-    sessions_routes(handler.clone()).or(users_routes(handler))
+    warp::path("api").and(sessions_routes(handler.clone()).or(users_routes(handler)))
 }
 
 pub fn public_route() -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
