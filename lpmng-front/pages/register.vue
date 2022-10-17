@@ -96,7 +96,7 @@
             color="primary"
             :loading="loading"
             :disabled="loading"
-            @click="login"
+            @click="register"
           >
             INSCRIPTION
           </v-btn>
@@ -135,13 +135,21 @@ export default {
     }
   },
   methods: {
-    login () {
+    register () {
       this.loading = true
-      setTimeout(() => {
+      this.$store.getters['api/register'](this.username, this.firstname, this.lastname, this.email, this.password, this.phone).then(res => {
+        if (res.isOk) {
+          return this.$store.getters['api/login'](this.username, this.password)
+        } else {
+          this.loading = false
+          throw 'Error'
+        }
+      })
+      /*setTimeout(() => {
         this.loading = false
         this.$router.push('/')
         this.$router.push('/no-internet')
-      }, 2000)
+      }, 2000)*/
     }
   }
 }

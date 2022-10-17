@@ -26,6 +26,7 @@
       <v-form>
         <v-container>
           <v-text-field
+            v-model="username"
             :rules="[rules.required]"
             name="username"
             placeholder="Nom d'utilisateur"
@@ -34,6 +35,7 @@
             outlined
           ></v-text-field>
           <v-text-field
+            v-model="password"
             :rules="[rules.required]"
             name="password"
             placeholder="Mot de passe"
@@ -66,6 +68,8 @@ export default {
   data () {
     return {
       loading: false,
+      username: '',
+      password: '',
       rules: {
         required: value => !!value || 'Requis.'
       }
@@ -74,11 +78,19 @@ export default {
   methods: {
     login () {
       this.loading = true
-      setTimeout(() => {
+      this.$store.getters['api/login'](this.username, this.password).then(res => {
+        if (res.isOk) {
+          this.$router.push('/')
+        } else {
+          this.loading = false
+          throw 'Error'
+        }
+      })
+      /*setTimeout(() => {
         this.loading = false
         this.$router.push('/')
         this.$router.push('/no-internet')
-      }, 2000)
+      }, 2000)*/
     }
   }
 }

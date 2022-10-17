@@ -26,12 +26,12 @@
       fixed
       app
     >
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
+      <v-app-bar-nav-icon @click.stop="drawer = !drawer"/>
       <v-toolbar-title>{{ title }}</v-toolbar-title>
     </v-app-bar>
     <v-main>
       <v-container>
-        <Nuxt />
+        <Nuxt/>
       </v-container>
     </v-main>
     <v-footer
@@ -53,9 +53,19 @@ export default {
       fixed: false,
       items: [
         {
-          icon: 'mdi-apps',
-          title: 'Welcome',
-          to: '/'
+          icon: 'mdi-view-dashboard',
+          title: 'Accueil',
+          to: '/admin'
+        },
+        {
+          icon: 'mdi-account-multiple',
+          title: 'Utilisateurs',
+          to: '/admin/users'
+        },
+        {
+          icon: 'mdi-web',
+          title: 'Sessions',  
+          to: '/admin/sessions'
         }
       ],
       miniVariant: false,

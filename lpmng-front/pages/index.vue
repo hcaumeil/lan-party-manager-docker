@@ -11,6 +11,7 @@
       <p>Vous avez accès à internet.</p>
     </v-container>
     <v-card-actions>
+      <v-spacer></v-spacer>
       <NuxtLink to="/admin">
         <v-btn
           depressed
@@ -33,6 +34,7 @@ export default {
       lastname: 'Lastname',
       admin: true
     }
-  }
+  },
+  middleware: 'auth'
 }
 </script>
