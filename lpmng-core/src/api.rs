@@ -34,7 +34,7 @@ pub async fn user_post(
     handler: DbHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     let res = match user.id {
-        Some(_) => false,
+        Some(_) => handler.update_user(user).await,
         None => handler.insert_user(user).await,
     };
 

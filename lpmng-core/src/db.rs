@@ -60,6 +60,50 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         };
     }
 
+    pub async fn update_user(&self, user: User) -> bool {
+        let mut tx = match self.pool.begin().await {
+            Ok(transaction) => transaction,
+            Err(_) => {
+                return false;
+            }
+        };
+
+        match sqlx::query!(
+            r#"
+            UPDATE users
+            SET username = $1,
+            firstname = $2,
+            lastname = $3,
+            email = $4,
+            password = $5,
+            phone = $6,
+            role = $7 ,
+            is_allowed = $8
+            WHERE id=$9
+        "#,
+            user.username,
+            user.firstname,
+            user.lastname,
+            user.email,
+            user.password,
+            user.phone,
+            user.role,
+            user.is_allowed,
+            Uuid::from_u128(user.id.expect("[ASSERTION] could not get id"))
+        )
+        .execute(&mut tx)
+        .await
+        {
+            Ok(_) => {}
+            Err(_) => return false,
+        };
+
+        return match tx.commit().await {
+            Ok(_) => true,
+            Err(_) => false,
+        };
+    }
+
     pub async fn get_user(&self, id: u128) -> Option<User> {
         return match sqlx::query!(
             r#"

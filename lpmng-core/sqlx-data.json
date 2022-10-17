@@ -1,5 +1,25 @@
 {
   "db": "PostgreSQL",
+  "09a2cbd52c357f3de0c61292973417e0abbf618f17bd3accb48622a9e662bb6c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Bool",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            UPDATE users\n            SET username = $1,\n            firstname = $2,\n            lastname = $3,\n            email = $4,\n            password = $5,\n            phone = $6,\n            role = $7 ,\n            is_allowed = $8\n            WHERE id=$9\n        "
+  },
   "3d238ffaf7c813e1e104606e5ff2a633a2bb718b59442a1130905c5b09eaeb09": {
     "describe": {
       "columns": [],
