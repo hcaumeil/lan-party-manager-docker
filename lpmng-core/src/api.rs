@@ -1,7 +1,38 @@
+use serde_json;
 use std::{convert::Infallible, path::Path};
 use warp::{self, Filter, Rejection, Reply};
 
-use crate::{db::DbHandler, models::User};
+use crate::{
+    auth::{build_token, hash},
+    db::DbHandler,
+    models::User,
+};
+
+pub async fn login_post(
+    json: serde_json::Value,
+    handler: DbHandler,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    if let Some(login) = json.get("login") {
+        if let Some(password) = json.get("password") {
+            if handler
+                .check_password(
+                    login.as_str().unwrap().into(),
+                    password.as_str().unwrap().into(),
+                )
+                .await
+            {
+                return Ok(warp::reply::json(&"dd"));
+            } else {
+                return Err(warp::reject());
+            }
+        } else {
+            return Err(warp::reject());
+        }
+    } else {
+        return Err(warp::reject());
+    }
+    // if handler.check_password()
+}
 
 pub async fn sessions_get(handler: DbHandler) -> Result<impl warp::Reply, warp::Rejection> {
     Ok(warp::reply())
@@ -33,9 +64,12 @@ pub async fn user_post(
     user: User,
     handler: DbHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    let mut object = user.clone();
+    object.password = hash(user.password);
+
     let res = match user.id {
-        Some(_) => handler.update_user(user).await,
-        None => handler.insert_user(user).await,
+        Some(_) => handler.update_user(object).await,
+        None => handler.insert_user(object).await,
     };
 
     if res {
@@ -91,10 +125,24 @@ pub fn users_routes(
     get.or(list).or(post)
 }
 
+pub fn login_routes(
+    handler: DbHandler,
+) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
+    warp::post()
+        .and(warp::path("login"))
+        .and(warp::body::json())
+        .and(with_handler(handler))
+        .and_then(login_post)
+}
+
 pub fn api_routes(
     handler: DbHandler,
 ) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
-    warp::path("api").and(sessions_routes(handler.clone()).or(users_routes(handler)))
+    warp::path("api").and(
+        sessions_routes(handler.clone())
+            .or(users_routes(handler.clone()))
+            .or(login_routes(handler)),
+    )
 }
 
 pub fn public_route() -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {

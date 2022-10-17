@@ -1,3 +1,4 @@
+use crate::auth::check_hash;
 use crate::models::{Session, User};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::types::Uuid;
@@ -100,6 +101,22 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 
         return match tx.commit().await {
             Ok(_) => true,
+            Err(_) => false,
+        };
+    }
+
+    pub async fn check_password(&self, login: String, password: String) -> bool {
+        return match sqlx::query!(
+            r#"
+                SELECT * FROM users
+                WHERE username=$1
+            "#,
+            login
+        )
+        .fetch_one(&self.pool)
+        .await
+        {
+            Ok(x) => check_hash(password, x),
             Err(_) => false,
         };
     }

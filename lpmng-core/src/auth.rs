@@ -1,23 +1,25 @@
+use base64::encode;
 use biscuit_auth::{builder::*, error, Authorizer, Biscuit, KeyPair};
+use sha256::digest;
 
-pub fn test() {
+use crate::models::User;
+
+pub fn build_token(user: User) -> String {
     let root = KeyPair::new();
-    let public_key = root.public();
 
-    // creating a first token
-    let token1 = {
-        let mut builder = Biscuit::builder(&root);
+    let mut builder = Biscuit::builder(&root);
 
-        // let's define some access rights
-        builder.add_authority_fact("right(\"/a/file1.txt\", \"read\")")?;
-        builder.add_authority_fact("right(\"/a/file1.txt\", \"write\")")?;
-        builder.add_authority_fact("right(\"/a/file2.txt\", \"read\")")?;
-        builder.add_authority_fact("right(\"/b/file3.txt\", \"write\")")?;
+    builder.add_authority_fact("role(\"user\")").unwrap();
 
-        // we can now create the token
-        let biscuit = builder.build()?;
-        println!("biscuit (authority): {}", biscuit.print());
+    let biscuit = builder.build().unwrap();
 
-        biscuit.to_vec()?
-    };
+    encode(biscuit.to_vec().unwrap())
+}
+
+pub fn hash(input: String) -> String {
+    digest(input)
+}
+
+pub fn check_hash(input: String, h: String) -> bool {
+    hash(input) == h
 }

@@ -19,7 +19,7 @@ impl Session {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct User {
     pub id: Option<u128>,
     pub username: String,
