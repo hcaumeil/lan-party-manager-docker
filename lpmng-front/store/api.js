@@ -1,6 +1,7 @@
 export const state = () => ({
   authenticated: false,
-  endpoint: '/api'
+  endpoint: '/api',
+  biscuit: ''
 })
 
 export const getters = {
@@ -15,8 +16,11 @@ export const getters = {
         login: username,
         password: password
       })
-    }).then(res => {
+    }).then(async res => {
       state.authenticated = res.ok
+      if (state.authenticated) {
+        state.biscuit = JSON.parse(`${await res.text()}`)
+      }
       return state.authenticated
     })
   },
@@ -37,6 +41,18 @@ export const getters = {
         is_allowed: false
       })
     })
+  },
+  users: (state) => {
+    if (!state.authenticated) {
+      throw 'Not connected'
+    }
+    return fetch(`${state.endpoint}/users`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.biscuit}`
+      }
+    }).then(res => res.json())
   }
 }
 
