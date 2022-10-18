@@ -138,7 +138,7 @@ export default {
     register () {
       this.loading = true
       this.$store.getters['api/register'](this.username, this.firstname, this.lastname, this.email, this.password, this.phone).then(res => {
-        if (res.isOk) {
+        if (res.ok) {
           return this.$store.getters['api/login'](this.username, this.password)
         } else {
           this.loading = false

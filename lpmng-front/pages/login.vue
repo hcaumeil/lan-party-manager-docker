@@ -79,7 +79,8 @@ export default {
     login () {
       this.loading = true
       this.$store.getters['api/login'](this.username, this.password).then(res => {
-        if (res.isOk) {
+        if (res) {
+        this.loading = false
           this.$router.push('/')
         } else {
           this.loading = false

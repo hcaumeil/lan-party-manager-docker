@@ -1,9 +1,10 @@
 export const state = () => ({
-  bearer: false,
+  authenticated: false,
   endpoint: '/api'
 })
 
 export const getters = {
+  authenticated: (state) => state.authenticated,
   login: (state) => (username, password) => {
     return fetch(`${state.endpoint}/login`, {
       method: 'POST',
@@ -14,9 +15,10 @@ export const getters = {
         login: username,
         password: password
       })
-    })/*.then(res => {
-
-    })*/
+    }).then(res => {
+      state.authenticated = res.ok
+      return state.authenticated
+    })
   },
   register: (state) => (username, firstname, lastname, email, password, phone) => {
     return fetch(`${state.endpoint}/users`, {
