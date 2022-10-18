@@ -15,14 +15,15 @@ pub async fn login_post(
     if let Some(login) = json.get("login") {
         if let Some(password) = json.get("password") {
             let role = handler
-            .check_password(
+                .check_password(
                     login.as_str().unwrap().into(),
-            password.as_str().unwrap().into(),
-            )
-            .await;
-            if role.is_some()
-            {
-                return Ok(warp::reply::json(&role.expect("Can't be null")));
+                    password.as_str().unwrap().into(),
+                )
+                .await;
+            if role.is_some() {
+                return Ok(warp::reply::json(&build_token(
+                    role.expect("Can't be null"),
+                )));
             } else {
                 return Err(warp::reject());
             }
@@ -32,7 +33,6 @@ pub async fn login_post(
     } else {
         return Err(warp::reject());
     }
-    // if handler.check_password()
 }
 
 pub async fn sessions_get(handler: DbHandler) -> Result<impl warp::Reply, warp::Rejection> {

@@ -4,12 +4,14 @@ use sha256::digest;
 
 use crate::models::User;
 
-pub fn build_token(user: User) -> String {
+pub fn build_token(role: String) -> String {
     let root = KeyPair::new();
 
     let mut builder = Biscuit::builder(&root);
 
-    builder.add_authority_fact("role(\"user\")").unwrap();
+    builder
+        .add_authority_fact(format!("role(\"{}\")", role).as_str())
+        .unwrap();
 
     let biscuit = builder.build().unwrap();
 
