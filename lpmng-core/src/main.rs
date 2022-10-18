@@ -4,6 +4,7 @@ mod db;
 mod models;
 
 use api::{api_routes, public_route, ApiHandler};
+use biscuit_auth::KeyPair;
 use warp::Filter;
 
 #[tokio::main]
@@ -14,7 +15,7 @@ async fn main() {
     println!("[INFO] http server starting...");
     warp::serve(public_route().or(api_routes(ApiHandler {
         db: db_handler,
-        auth_key: "dd".into(),
+        auth_key: KeyPair::new().private(),
     })))
     .run(([127, 0, 0, 1], 3030))
     .await;

@@ -1,4 +1,4 @@
-use biscuit_auth::KeyPair;
+use biscuit_auth::PrivateKey;
 use serde_json;
 use std::{convert::Infallible, path::Path};
 use warp::{self, Filter, Rejection, Reply};
@@ -12,7 +12,7 @@ use crate::{
 #[derive(Clone)]
 pub struct ApiHandler {
     pub db: DbHandler,
-    pub auth_key: String,
+    pub auth_key: PrivateKey,
 }
 
 pub async fn login_post(
@@ -31,6 +31,7 @@ pub async fn login_post(
             if role.is_some() {
                 return Ok(warp::reply::json(&build_token(
                     role.expect("Can't be null"),
+                    handler.auth_key,
                 )));
             } else {
                 return Err(warp::reject());
@@ -59,7 +60,7 @@ pub async fn users_get(
     handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     let res = handler.db.get_users().await;
-    println!("{}", check_admin(auth_token));
+    println!("{}", check_admin(auth_token, handler.auth_key));
 
     match res {
         Some(json) => Ok(warp::reply::json(&json)),

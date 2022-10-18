@@ -3,8 +3,8 @@ use sha256::digest;
 
 use crate::models::User;
 
-pub fn build_token(role: String) -> String {
-    let root = KeyPair::from(PrivateKey::from_bytes("dd".as_bytes()).unwrap());
+pub fn build_token(role: String, private_key: PrivateKey) -> String {
+    let root = KeyPair::from(private_key);
 
     let mut builder = Biscuit::builder(&root);
 
@@ -17,10 +17,8 @@ pub fn build_token(role: String) -> String {
     biscuit.to_base64().unwrap()
 }
 
-pub fn check_admin(auth_token: String) -> bool {
-    match Biscuit::from_base64(auth_token, |_| {
-        PrivateKey::from_bytes("dd".as_bytes()).unwrap().public()
-    }) {
+pub fn check_admin(auth_token: String, private_key: PrivateKey) -> bool {
+    match Biscuit::from_base64(auth_token, |_| private_key.public()) {
         Ok(t) => {
             let mut auth = t.authorizer().unwrap();
 
