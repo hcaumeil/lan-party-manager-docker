@@ -1,11 +1,10 @@
-use base64::encode;
-use biscuit_auth::{builder::*, error, Authorizer, Biscuit, KeyPair};
+use biscuit_auth::{builder::*, error, Authorizer, Biscuit, KeyPair, PrivateKey};
 use sha256::digest;
 
 use crate::models::User;
 
 pub fn build_token(role: String) -> String {
-    let root = KeyPair::new();
+    let root = KeyPair::from(PrivateKey::from_bytes("dd".as_bytes()).unwrap());
 
     let mut builder = Biscuit::builder(&root);
 
@@ -15,7 +14,23 @@ pub fn build_token(role: String) -> String {
 
     let biscuit = builder.build().unwrap();
 
-    encode(biscuit.to_vec().unwrap())
+    biscuit.to_base64().unwrap()
+}
+
+pub fn check_admin(auth_token: String) -> bool {
+    match Biscuit::from_base64(auth_token, |_| {
+        PrivateKey::from_bytes("dd".as_bytes()).unwrap().public()
+    }) {
+        Ok(t) => {
+            let mut auth = t.authorizer().unwrap();
+
+            auth.add_check("check id role(\"admin\")");
+            auth.allow();
+
+            auth.authorize().is_ok()
+        }
+        Err(_) => false,
+    }
 }
 
 pub fn hash(input: String) -> String {

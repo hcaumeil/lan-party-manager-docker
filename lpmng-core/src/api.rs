@@ -1,20 +1,28 @@
+use biscuit_auth::KeyPair;
 use serde_json;
 use std::{convert::Infallible, path::Path};
 use warp::{self, Filter, Rejection, Reply};
 
 use crate::{
-    auth::{build_token, hash},
+    auth::{build_token, check_admin, hash},
     db::DbHandler,
     models::User,
 };
 
+#[derive(Clone)]
+pub struct ApiHandler {
+    pub db: DbHandler,
+    pub auth_key: String,
+}
+
 pub async fn login_post(
     json: serde_json::Value,
-    handler: DbHandler,
+    handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     if let Some(login) = json.get("login") {
         if let Some(password) = json.get("password") {
             let role = handler
+                .db
                 .check_password(
                     login.as_str().unwrap().into(),
                     password.as_str().unwrap().into(),
@@ -35,16 +43,23 @@ pub async fn login_post(
     }
 }
 
-pub async fn sessions_get(handler: DbHandler) -> Result<impl warp::Reply, warp::Rejection> {
+pub async fn sessions_get(handler: ApiHandler) -> Result<impl warp::Reply, warp::Rejection> {
     Ok(warp::reply())
 }
 
-pub async fn session_get(id: i32, handler: DbHandler) -> Result<impl warp::Reply, warp::Rejection> {
+pub async fn session_get(
+    id: i32,
+    handler: ApiHandler,
+) -> Result<impl warp::Reply, warp::Rejection> {
     Ok(warp::reply())
 }
 
-pub async fn users_get(handler: DbHandler) -> Result<impl warp::Reply, warp::Rejection> {
-    let res = handler.get_users().await;
+pub async fn users_get(
+    auth_token: String,
+    handler: ApiHandler,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let res = handler.db.get_users().await;
+    println!("{}", check_admin(auth_token));
 
     match res {
         Some(json) => Ok(warp::reply::json(&json)),
@@ -52,8 +67,8 @@ pub async fn users_get(handler: DbHandler) -> Result<impl warp::Reply, warp::Rej
     }
 }
 
-pub async fn user_get(id: u128, handler: DbHandler) -> Result<impl warp::Reply, warp::Rejection> {
-    let res = handler.get_user(id).await;
+pub async fn user_get(id: u128, handler: ApiHandler) -> Result<impl warp::Reply, warp::Rejection> {
+    let res = handler.db.get_user(id).await;
 
     match res {
         Some(json) => Ok(warp::reply::json(&json)),
@@ -63,14 +78,14 @@ pub async fn user_get(id: u128, handler: DbHandler) -> Result<impl warp::Reply, 
 
 pub async fn user_post(
     user: User,
-    handler: DbHandler,
+    handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     let mut object = user.clone();
     object.password = hash(user.password);
 
     let res = match user.id {
-        Some(_) => handler.update_user(object).await,
-        None => handler.insert_user(object).await,
+        Some(_) => handler.db.update_user(object).await,
+        None => handler.db.insert_user(object).await,
     };
 
     if res {
@@ -81,13 +96,13 @@ pub async fn user_post(
 }
 
 fn with_handler(
-    handler: DbHandler,
-) -> impl Filter<Extract = (DbHandler,), Error = Infallible> + Clone {
+    handler: ApiHandler,
+) -> impl Filter<Extract = (ApiHandler,), Error = Infallible> + Clone {
     warp::any().map(move || handler.clone())
 }
 
 pub fn sessions_routes(
-    handler: DbHandler,
+    handler: ApiHandler,
 ) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     let list = warp::get()
         .and(warp::path("sessions"))
@@ -104,10 +119,11 @@ pub fn sessions_routes(
 }
 
 pub fn users_routes(
-    handler: DbHandler,
+    handler: ApiHandler,
 ) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     let list = warp::get()
         .and(warp::path("users"))
+        .and(warp::header::<String>("Authorization"))
         .and(with_handler(handler.clone()))
         .and_then(users_get);
 
@@ -127,7 +143,7 @@ pub fn users_routes(
 }
 
 pub fn login_routes(
-    handler: DbHandler,
+    handler: ApiHandler,
 ) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     warp::post()
         .and(warp::path("login"))
@@ -137,7 +153,7 @@ pub fn login_routes(
 }
 
 pub fn api_routes(
-    handler: DbHandler,
+    handler: ApiHandler,
 ) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     warp::path("api").and(
         sessions_routes(handler.clone())
