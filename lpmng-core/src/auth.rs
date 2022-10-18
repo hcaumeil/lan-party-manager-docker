@@ -22,8 +22,8 @@ pub fn check_admin(auth_token: String, private_key: PrivateKey) -> bool {
         Ok(t) => {
             let mut auth = t.authorizer().unwrap();
 
-            auth.add_check("check id role(\"admin\")");
-            auth.allow();
+            auth.add_code("allow if role(\"admin\")");
+            //auth.allow();
 
             auth.authorize().is_ok()
         }
