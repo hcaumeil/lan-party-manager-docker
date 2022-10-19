@@ -42,21 +42,23 @@ pub async fn login_post(
                 || (login.as_str().unwrap() == "client"
                     && password.as_str().unwrap() == handler.client_key)
             {
-                match build_token("admin".into(), handler.auth_key) {
+                match build_token("admin".into(), 0, handler.auth_key) {
                     Some(t) => return Ok(warp::reply::json(&t)),
                     None => return Err(warp::reject()),
                 }
             }
 
-            let role = handler
+            let auth = handler
                 .db
                 .check_password(
                     login.as_str().unwrap().into(),
                     password.as_str().unwrap().into(),
                 )
                 .await;
-            if role.is_some() {
-                match build_token(role.expect("Can't be null"), handler.auth_key) {
+            if auth.is_some() {
+                let (role, id) = auth.expect("Can't be null");
+
+                match build_token(role, id, handler.auth_key) {
                     Some(t) => return Ok(warp::reply::json(&t)),
                     None => return Err(warp::reject()),
                 }

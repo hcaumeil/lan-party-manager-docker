@@ -1,15 +1,17 @@
-use biscuit_auth::{builder::*, error, Authorizer, Biscuit, KeyPair, PrivateKey};
+use biscuit_auth::{Biscuit, KeyPair, PrivateKey};
 use sha256::digest;
 
-use crate::models::User;
-
-pub fn build_token(role: String, private_key: PrivateKey) -> Option<String> {
+pub fn build_token(role: String, id: u128, private_key: PrivateKey) -> Option<String> {
     let root = KeyPair::from(private_key);
 
     let mut builder = Biscuit::builder(&root);
 
     builder
         .add_authority_fact(format!("role(\"{}\")", role).as_str())
+        .ok()?;
+
+    builder
+        .add_authority_fact(format!("id({})", id).as_str())
         .ok()?;
 
     let biscuit = builder.build().ok()?;
@@ -23,7 +25,6 @@ pub fn check_admin(auth_token: String, private_key: PrivateKey) -> bool {
             let mut auth = t.authorizer().unwrap();
 
             auth.add_code("allow if role(\"admin\")");
-            //auth.allow();
 
             auth.authorize().is_ok()
         }

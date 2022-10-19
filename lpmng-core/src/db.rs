@@ -173,10 +173,10 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         };
     }
 
-    pub async fn check_password(&self, login: String, password: String) -> Option<String> {
+    pub async fn check_password(&self, login: String, password: String) -> Option<(String, u128)> {
         return match sqlx::query!(
             r#"
-                SELECT password, role FROM users
+                SELECT password, role, id FROM users
                 WHERE username=$1
             "#,
             login
@@ -186,7 +186,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         {
             Ok(x) => {
                 if check_hash(password, x.password.to_string()) {
-                    Some(x.role.to_string())
+                    Some((x.role.to_string(), x.id.as_u128()))
                 } else {
                     None
                 }
