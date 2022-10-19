@@ -6,7 +6,7 @@ use warp::{self, Filter, Rejection, Reply};
 use crate::{
     auth::{build_token, check_admin, hash},
     db::DbHandler,
-    models::User,
+    models::{Session, User},
 };
 
 #[derive(Clone)]
@@ -53,6 +53,22 @@ pub async fn session_get(
     handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     Ok(warp::reply())
+}
+
+pub async fn sessions_post(
+    session: Session,
+    handler: ApiHandler,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let res = match session.id {
+        Some(_) => false,
+        None => handler.db.insert_session(session).await,
+    };
+
+    if res {
+        Ok(warp::reply())
+    } else {
+        Err(warp::reject())
+    }
 }
 
 pub async fn users_get(
@@ -119,10 +135,16 @@ pub fn sessions_routes(
     let get = warp::get()
         .and(warp::path("sessions"))
         .and(warp::path::param())
-        .and(with_handler(handler))
+        .and(with_handler(handler.clone()))
         .and_then(session_get);
 
-    list.or(get)
+    let post = warp::post()
+        .and(warp::path("sessions"))
+        .and(warp::body::json())
+        .and(with_handler(handler))
+        .and_then(sessions_post);
+
+    get.or(list).or(post)
 }
 
 pub fn users_routes(

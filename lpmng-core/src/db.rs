@@ -26,6 +26,42 @@ impl DbHandler {
         }
     }
 
+    pub async fn insert_session(&self, session: Session) -> bool {
+        let mut tx = match self.pool.begin().await {
+            Ok(transaction) => transaction,
+            Err(_) => {
+                return false;
+            }
+        };
+
+        let user_id = match session.user_id {
+            Some(i) => Some(Uuid::from_u128(i)),
+            None => None,
+        };
+
+        match sqlx::query!(
+            r#"
+INSERT INTO sessions (ip4, mac, user_id, internet)
+VALUES ($1, $2, $3, $4)
+        "#,
+            session.ip4,
+            session.mac,
+            user_id,
+            session.internet
+        )
+        .execute(&mut tx)
+        .await
+        {
+            Ok(_) => {}
+            Err(_) => return false,
+        };
+
+        return match tx.commit().await {
+            Ok(_) => true,
+            Err(_) => false,
+        };
+    }
+
     pub async fn insert_user(&self, user: User) -> bool {
         let mut tx = match self.pool.begin().await {
             Ok(transaction) => transaction,
@@ -116,7 +152,13 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         .fetch_one(&self.pool)
         .await
         {
-            Ok(x) => if check_hash(password, x.password.to_string()) {Some(x.role.to_string())} else {None},
+            Ok(x) => {
+                if check_hash(password, x.password.to_string()) {
+                    Some(x.role.to_string())
+                } else {
+                    None
+                }
+            }
             Err(_) => None,
         };
     }

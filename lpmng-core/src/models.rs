@@ -2,15 +2,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct Session {
-    ip4: String,
-    mac: String,
-    user_id: Option<i32>,
-    internet: bool,
+    pub id: Option<u128>,
+    pub ip4: String,
+    pub mac: String,
+    pub user_id: Option<u128>,
+    pub internet: bool,
 }
 
 impl Session {
     pub fn new(ip4: String, mac: String) -> Self {
         Self {
+            id: None,
             ip4,
             mac,
             user_id: None,
