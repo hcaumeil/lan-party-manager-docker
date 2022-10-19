@@ -27,6 +27,11 @@
           "name": "internet",
           "ordinal": 4,
           "type_info": "Bool"
+        },
+        {
+          "name": "created",
+          "ordinal": 5,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -34,6 +39,7 @@
         false,
         false,
         true,
+        false,
         false
       ],
       "parameters": {
