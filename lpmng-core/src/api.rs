@@ -15,6 +15,20 @@ pub struct ApiHandler {
     pub auth_key: PrivateKey,
 }
 
+pub fn is_admin(auth_token: String, private_key: PrivateKey) -> bool {
+    let mut split = auth_token.split(" ");
+
+    if split.clone().count() != 2 {
+        return false;
+    }
+
+    if split.nth(0).unwrap() != "bearer" {
+        return false;
+    }
+
+    check_admin(split.nth(1).unwrap().into(), private_key)
+}
+
 pub async fn login_post(
     json: serde_json::Value,
     handler: ApiHandler,
@@ -44,8 +58,20 @@ pub async fn login_post(
     }
 }
 
-pub async fn sessions_get(handler: ApiHandler) -> Result<impl warp::Reply, warp::Rejection> {
-    Ok(warp::reply())
+pub async fn sessions_get(
+    auth_token: String,
+    handler: ApiHandler,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    if !is_admin(auth_token, handler.auth_key) {
+        return Err(warp::reject());
+    }
+
+    let res = handler.db.get_sessions().await;
+
+    match res {
+        Some(json) => Ok(warp::reply::json(&json)),
+        None => Err(warp::reject()),
+    }
 }
 
 pub async fn session_get(
@@ -129,6 +155,7 @@ pub fn sessions_routes(
 ) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     let list = warp::get()
         .and(warp::path("sessions"))
+        .and(warp::header::<String>("Authorization"))
         .and(with_handler(handler.clone()))
         .and_then(sessions_get);
 

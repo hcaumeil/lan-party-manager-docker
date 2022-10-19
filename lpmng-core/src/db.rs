@@ -62,6 +62,38 @@ VALUES ($1, $2, $3, $4)
         };
     }
 
+    pub async fn get_sessions(&self) -> Option<Vec<Session>> {
+        let mut res: Vec<Session> = Vec::new();
+
+        match sqlx::query!(
+            r#"
+                SELECT * FROM sessions
+            "#
+        )
+        .fetch_all(&self.pool)
+        .await
+        {
+            Ok(q) => {
+                for x in &q {
+                    let user_id = match x.user_id {
+                        Some(i) => Some(i.as_u128()),
+                        None => None,
+                    };
+                    res.push(Session {
+                        id: Some(x.id.as_u128()),
+                        ip4: x.ip4.to_string(),
+                        mac: x.mac.to_string(),
+                        user_id,
+                        internet: x.internet,
+                    });
+                }
+            }
+            Err(e) => return None,
+        };
+
+        Some(res)
+    }
+
     pub async fn insert_user(&self, user: User) -> bool {
         let mut tx = match self.pool.begin().await {
             Ok(transaction) => transaction,
