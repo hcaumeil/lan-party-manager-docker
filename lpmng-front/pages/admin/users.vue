@@ -298,6 +298,11 @@ export default {
 
     save () {
       if (this.editedIndex > -1) {
+        for (let k of Object.keys(this.editedItem)) {
+          if (this.users[this.editedIndex][k] !== this.editedItem[k]) {
+            console.log(`Value changed for key ${k}  ${this.users[this.editedIndex][k]} -> ${this.editedItem[k]}`)
+          }
+        }
         Object.assign(this.users[this.editedIndex], this.editedItem)
       } else {
         this.users.push(this.editedItem)
