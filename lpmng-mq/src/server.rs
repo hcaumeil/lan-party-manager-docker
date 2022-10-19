@@ -8,6 +8,22 @@ pub mod agent {
     tonic::include_proto!("agent");
 }
 
+impl AgentResponse {
+    pub fn success() -> Self {
+        AgentResponse {
+            success: true,
+            body: "".into(),
+        }
+    }
+
+    pub fn fail(str: &str) -> Self {
+        AgentResponse {
+            success: false,
+            body: str.into(),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct RouterService {
     pub handler: fn(RouterRequest) -> AgentResponse,

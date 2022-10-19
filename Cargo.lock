@@ -912,7 +912,9 @@ dependencies = [
 name = "lpmng-router"
 version = "0.1.0"
 dependencies = [
+ "lpmng-mq",
  "pftables-rs",
+ "tokio",
 ]
 
 [[package]]
