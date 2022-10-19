@@ -11,7 +11,7 @@ pub fn build_token(role: String, id: u128, private_key: PrivateKey) -> Option<St
         .ok()?;
 
     builder
-        .add_authority_fact(format!("id({})", id).as_str())
+        .add_authority_fact(format!("id(\"{}\")", id).as_str())
         .ok()?;
 
     let biscuit = builder.build().ok()?;
