@@ -101,14 +101,11 @@ pub async fn users_get(
     auth_token: String,
     handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    if !is_admin(auth_token, handler.auth_key) {
+        return Err(warp::reject());
+    }
+
     let res = handler.db.get_users().await;
-    println!(
-        "{}",
-        check_admin(
-            auth_token.split(" ").nth(1).unwrap().into(),
-            handler.auth_key
-        )
-    );
 
     match res {
         Some(json) => Ok(warp::reply::json(&json)),
