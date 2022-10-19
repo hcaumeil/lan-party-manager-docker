@@ -29,10 +29,10 @@ pub async fn login_post(
                 )
                 .await;
             if role.is_some() {
-                return Ok(warp::reply::json(&build_token(
-                    role.expect("Can't be null"),
-                    handler.auth_key,
-                )));
+                match build_token(role.expect("Can't be null"), handler.auth_key) {
+                    Some(t) => return Ok(warp::reply::json(&t)),
+                    None => return Err(warp::reject()),
+                }
             } else {
                 return Err(warp::reject());
             }

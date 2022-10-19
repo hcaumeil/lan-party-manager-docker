@@ -3,18 +3,18 @@ use sha256::digest;
 
 use crate::models::User;
 
-pub fn build_token(role: String, private_key: PrivateKey) -> String {
+pub fn build_token(role: String, private_key: PrivateKey) -> Option<String> {
     let root = KeyPair::from(private_key);
 
     let mut builder = Biscuit::builder(&root);
 
     builder
         .add_authority_fact(format!("role(\"{}\")", role).as_str())
-        .unwrap();
+        .ok()?;
 
-    let biscuit = builder.build().unwrap();
+    let biscuit = builder.build().ok()?;
 
-    biscuit.to_base64().unwrap()
+    biscuit.to_base64().ok()
 }
 
 pub fn check_admin(auth_token: String, private_key: PrivateKey) -> bool {
