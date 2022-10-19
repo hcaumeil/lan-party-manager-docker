@@ -21,6 +21,19 @@
       <p>Vous n'avez pas été autorisé à acceder à internet. Merci d'aller dans la salle {{ this.room }} pour demander
         l'accès.</p>
     </v-container>
+    <v-card-actions
+      v-if="$store.getters['api/is_admin']"
+    >
+      <v-spacer></v-spacer>
+      <NuxtLink to="/admin">
+        <v-btn
+          depressed
+          color="primary"
+        >
+          Acceder à la console admin
+        </v-btn>
+      </NuxtLink>
+    </v-card-actions>
   </v-card>
 </template>
 
@@ -32,6 +45,7 @@ export default {
     return {
       room: 'E...',
     }
-  }
+  },
+  middleware: 'auth'
 }
 </script>

@@ -35,6 +35,7 @@ export const state = () => (proxy)
 
 export const getters = {
   authenticated: (state) => state.authenticated,
+  is_admin: (state) => state.role === "admin",
   login: (state) => (username, password) => {
     return fetch(`${state.endpoint}/login`, {
       method: 'POST',

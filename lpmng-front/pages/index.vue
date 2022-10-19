@@ -10,7 +10,9 @@
     <v-container>
       <p>Vous avez accès à internet.</p>
     </v-container>
-    <v-card-actions>
+    <v-card-actions
+    v-if="$store.getters['api/is_admin']"
+    >
       <v-spacer></v-spacer>
       <NuxtLink to="/admin">
         <v-btn
@@ -32,7 +34,6 @@ export default {
     return {
       firstname: 'Firstname',
       lastname: 'Lastname',
-      admin: true
     }
   },
   middleware: 'auth'

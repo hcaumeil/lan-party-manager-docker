@@ -258,7 +258,7 @@ export default {
       loading: false
     }
   },
-  middleware: 'auth',
+  middleware: ['auth', 'admin'],
   created () {
     this.$store.getters['api/users'].then(d => this.users = d)
   },
