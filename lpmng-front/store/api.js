@@ -1,11 +1,8 @@
-//import myPlugin from '~/plugins/persistedState.client.js'
-
-//export const plugins = [myPlugin]
-
 const target = {
   authenticated: false,
   endpoint: '/api',
-  biscuit: ''
+  biscuit: '',
+  role: 'user'
 }
 
 const handler = {
@@ -16,7 +13,7 @@ const handler = {
       } else {
         return JSON.parse(localStorage.getItem(prop))
       }
-    } catch(e) {
+    } catch (e) {
       console.log(e)
       return target[prop]
     }
@@ -51,7 +48,10 @@ export const getters = {
     }).then(async res => {
       state.authenticated = res.ok
       if (state.authenticated) {
-        state.biscuit = JSON.parse(`${await res.text()}`)
+        const creds = await res.json()
+        console.log(creds)
+        state.biscuit = creds.biscuit
+        state.role = creds.role
       }
       return state.authenticated
     })
