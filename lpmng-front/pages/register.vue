@@ -103,6 +103,21 @@
         </v-container>
       </v-form>
     </v-card>
+    <v-snackbar
+      v-model="snackbar"
+    >
+      Impossible de créer votre compte
+
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          text
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
+          Fermer
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -113,6 +128,7 @@ export default {
   data () {
     return {
       loading: false,
+      snackbar: false,
       username: '',
       firstname: '',
       lastname: '',
@@ -142,9 +158,10 @@ export default {
           return this.$store.getters['api/login'](this.username, this.password)
         } else {
           this.loading = false
+          this.snackbar = true
           throw 'Error'
         }
-      })
+      }).then()
       /*setTimeout(() => {
         this.loading = false
         this.$router.push('/')
