@@ -170,11 +170,6 @@ export default {
           this.$router.push('/login')
         }
       })
-      /*setTimeout(() => {
-        this.loading = false
-        this.$router.push('/')
-        this.$router.push('/no-internet')
-      }, 2000)*/
     }
   }
 }
