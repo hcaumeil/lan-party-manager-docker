@@ -1,8 +1,40 @@
-export const state = () => ({
+//import myPlugin from '~/plugins/persistedState.client.js'
+
+//export const plugins = [myPlugin]
+
+const target = {
   authenticated: false,
   endpoint: '/api',
   biscuit: ''
-})
+}
+
+const handler = {
+  get (target, prop, receiver) {
+    try {
+      if (localStorage.getItem(prop) === null) {
+        return target[prop]
+      } else {
+        return JSON.parse(localStorage.getItem(prop))
+      }
+    } catch(e) {
+      console.log(e)
+      return target[prop]
+    }
+  },
+  set (obj, prop, value) {
+    obj[prop] = value
+    try {
+      localStorage.setItem(prop, JSON.stringify(value))
+    } catch (e) {
+      console.log(e)
+    }
+    return true
+  }
+}
+
+const proxy = new Proxy(target, handler)
+
+export const state = () => (proxy)
 
 export const getters = {
   authenticated: (state) => state.authenticated,

@@ -161,7 +161,15 @@ export default {
           this.snackbar = true
           throw 'Error'
         }
-      }).then()
+      }).then(res => {
+        if (res) {
+          this.loading = false
+          this.$router.push('/')
+        } else {
+          this.loading = false
+          this.$router.push('/login')
+        }
+      })
       /*setTimeout(() => {
         this.loading = false
         this.$router.push('/')
