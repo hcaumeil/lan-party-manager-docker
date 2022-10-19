@@ -29,7 +29,7 @@
           "type_info": "Bool"
         },
         {
-          "name": "created",
+          "name": "date_time",
           "ordinal": 5,
           "type_info": "Timestamp"
         }
@@ -47,21 +47,6 @@
       }
     },
     "query": "\n                SELECT * FROM sessions\n            "
-  },
-  "06b5e0d5f0b84c489ec27b6af345760c63bf0c715a2bf90d243f7de694835f47": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Uuid",
-          "Bool"
-        ]
-      }
-    },
-    "query": "\nINSERT INTO sessions (ip4, mac, user_id, internet)\nVALUES ($1, $2, $3, $4)\n        "
   },
   "09a2cbd52c357f3de0c61292973417e0abbf618f17bd3accb48622a9e662bb6c": {
     "describe": {
@@ -267,5 +252,21 @@
       }
     },
     "query": "\n                SELECT * FROM users\n            "
+  },
+  "b64fc90c4d22290ddabdbef12c038b1deb7d0c0491dafa83dbe6596035df8e2a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Uuid",
+          "Bool",
+          "Timestamp"
+        ]
+      }
+    },
+    "query": "\nINSERT INTO sessions (ip4, mac, user_id, internet, date_time)\nVALUES ($1, $2, $3, $4, $5)\n        "
   }
 }

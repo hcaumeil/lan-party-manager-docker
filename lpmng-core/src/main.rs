@@ -5,6 +5,7 @@ mod models;
 
 use api::{api_routes, public_route, ApiHandler};
 use biscuit_auth::KeyPair;
+use lpmng_mq::client::Client;
 use warp::Filter;
 
 #[tokio::main]
@@ -30,6 +31,7 @@ async fn main() {
         auth_key: KeyPair::new().private(),
         admin_key,
         client_key,
+        router: Client::connect("127.0.0.1:3030".into()).unwrap(),
     })))
     .run(([127, 0, 0, 1], 3030))
     .await;

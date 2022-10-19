@@ -1,3 +1,4 @@
+use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -7,6 +8,7 @@ pub struct Session {
     pub mac: String,
     pub user_id: Option<u128>,
     pub internet: bool,
+    pub date_time: NaiveDateTime,
 }
 
 impl Session {
@@ -17,6 +19,7 @@ impl Session {
             mac,
             user_id: None,
             internet: false,
+            date_time: NaiveDateTime::MIN,
         }
     }
 }

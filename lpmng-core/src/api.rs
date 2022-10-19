@@ -1,4 +1,5 @@
 use biscuit_auth::PrivateKey;
+use lpmng_mq;
 use serde_json;
 use std::{convert::Infallible, path::Path};
 use warp::{self, Filter, Rejection, Reply};
@@ -6,7 +7,7 @@ use warp::{self, Filter, Rejection, Reply};
 use crate::{
     auth::{build_token, check_admin, hash},
     db::DbHandler,
-    models::{Session, User, Credentials},
+    models::{Credentials, Session, User},
 };
 
 #[derive(Clone)]
@@ -15,6 +16,7 @@ pub struct ApiHandler {
     pub auth_key: PrivateKey,
     pub admin_key: String,
     pub client_key: String,
+    pub router: lpmng_mq::client::Client,
 }
 
 pub fn is_admin(auth_token: String, private_key: PrivateKey) -> bool {
@@ -43,7 +45,12 @@ pub async fn login_post(
                     && password.as_str().unwrap() == handler.client_key)
             {
                 match build_token("admin".into(), 0, handler.auth_key) {
-                    Some(t) => return Ok(warp::reply::json(&Credentials {biscuit: t, role: "admin".into()})),
+                    Some(t) => {
+                        return Ok(warp::reply::json(&Credentials {
+                            biscuit: t,
+                            role: "admin".into(),
+                        }))
+                    }
                     None => return Err(warp::reject()),
                 }
             }
@@ -59,7 +66,7 @@ pub async fn login_post(
                 let (role, id) = auth.expect("Can't be null");
 
                 match build_token(role.to_owned(), id, handler.auth_key) {
-                    Some(t) => return Ok(warp::reply::json(&Credentials {biscuit: t, role})),
+                    Some(t) => return Ok(warp::reply::json(&Credentials { biscuit: t, role })),
                     None => return Err(warp::reject()),
                 }
             } else {

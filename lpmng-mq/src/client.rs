@@ -7,6 +7,7 @@ pub mod agent {
     tonic::include_proto!("agent");
 }
 
+#[derive(Clone)]
 pub struct Client {
     instance: RouterClient<Channel>,
 }

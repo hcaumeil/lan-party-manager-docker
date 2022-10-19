@@ -41,13 +41,14 @@ impl DbHandler {
 
         match sqlx::query!(
             r#"
-INSERT INTO sessions (ip4, mac, user_id, internet)
-VALUES ($1, $2, $3, $4)
+INSERT INTO sessions (ip4, mac, user_id, internet, date_time)
+VALUES ($1, $2, $3, $4, $5)
         "#,
             session.ip4,
             session.mac,
             user_id,
-            session.internet
+            session.internet,
+            session.date_time
         )
         .execute(&mut tx)
         .await
@@ -85,10 +86,11 @@ VALUES ($1, $2, $3, $4)
                         mac: x.mac.to_string(),
                         user_id,
                         internet: x.internet,
+                        date_time: x.date_time,
                     });
                 }
             }
-            Err(e) => return None,
+            Err(_) => return None,
         };
 
         Some(res)
