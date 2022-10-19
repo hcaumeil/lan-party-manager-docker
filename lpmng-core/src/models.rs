@@ -57,3 +57,9 @@ impl User {
         }
     }
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct Credentials {
+    pub biscuit: String,
+    pub role: String,
+}

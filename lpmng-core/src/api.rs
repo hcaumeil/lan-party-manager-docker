@@ -6,7 +6,7 @@ use warp::{self, Filter, Rejection, Reply};
 use crate::{
     auth::{build_token, check_admin, hash},
     db::DbHandler,
-    models::{Session, User},
+    models::{Session, User, Credentials},
 };
 
 #[derive(Clone)]
@@ -43,7 +43,7 @@ pub async fn login_post(
                     && password.as_str().unwrap() == handler.client_key)
             {
                 match build_token("admin".into(), 0, handler.auth_key) {
-                    Some(t) => return Ok(warp::reply::json(&t)),
+                    Some(t) => return Ok(warp::reply::json(&Credentials {biscuit: t, role: "admin".into()})),
                     None => return Err(warp::reject()),
                 }
             }
@@ -58,8 +58,8 @@ pub async fn login_post(
             if auth.is_some() {
                 let (role, id) = auth.expect("Can't be null");
 
-                match build_token(role, id, handler.auth_key) {
-                    Some(t) => return Ok(warp::reply::json(&t)),
+                match build_token(role.to_owned(), id, handler.auth_key) {
+                    Some(t) => return Ok(warp::reply::json(&Credentials {biscuit: t, role})),
                     None => return Err(warp::reject()),
                 }
             } else {
