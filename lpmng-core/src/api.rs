@@ -13,6 +13,8 @@ use crate::{
 pub struct ApiHandler {
     pub db: DbHandler,
     pub auth_key: PrivateKey,
+    pub admin_key: String,
+    pub client_key: String,
 }
 
 pub fn is_admin(auth_token: String, private_key: PrivateKey) -> bool {
@@ -35,6 +37,17 @@ pub async fn login_post(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     if let Some(login) = json.get("login") {
         if let Some(password) = json.get("password") {
+            if (login.as_str().unwrap() == "admin"
+                && password.as_str().unwrap() == handler.admin_key)
+                || (login.as_str().unwrap() == "client"
+                    && password.as_str().unwrap() == handler.client_key)
+            {
+                match build_token("admin".into(), handler.auth_key) {
+                    Some(t) => return Ok(warp::reply::json(&t)),
+                    None => return Err(warp::reject()),
+                }
+            }
+
             let role = handler
                 .db
                 .check_password(
@@ -126,6 +139,10 @@ pub async fn user_post(
     user: User,
     handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    if user.username == "admin" || user.username == "client" {
+        return Err(warp::reject());
+    }
+
     let mut object = user.clone();
     object.password = hash(user.password);
 
