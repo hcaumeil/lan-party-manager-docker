@@ -24,7 +24,7 @@ pub fn is_admin(auth_token: String, private_key: PrivateKey) -> bool {
         return false;
     }
 
-    if split.clone().nth(0).unwrap() != "bearer" {
+    if split.clone().nth(0).unwrap() != "Bearer" {
         return false;
     }
 
