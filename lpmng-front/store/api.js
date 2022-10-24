@@ -86,6 +86,18 @@ export const getters = {
         'Authorization': `Bearer ${state.biscuit}`
       }
     }).then(res => res.json())
+  },
+  sessions: (state) => {
+    if (!state.authenticated) {
+      throw 'Not connected'
+    }
+    return fetch(`${state.endpoint}/sessions`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.biscuit}`
+      }
+    }).then(res => res.json())
   }
 }
 
