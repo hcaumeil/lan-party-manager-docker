@@ -31,7 +31,7 @@ async fn main() {
         auth_key: KeyPair::new().private(),
         admin_key,
         client_key,
-        router: Client::connect("127.0.0.1:3030".into()).unwrap(),
+        router: Client::connect("http://127.0.0.1:8080".into()).await.unwrap(),
     })))
     .run(([127, 0, 0, 1], 3030))
     .await;
