@@ -13,14 +13,9 @@
 export default {
   name: 'Admin',
   data () {
-    return {
-
-    }
+    return {}
   },
-  middleware: ['auth', 'admin'],
-  created () {
-    this.$store.getters['api/users'].then(d => this.users = d)
-  }
+  middleware: ['auth', 'admin']
 }
 </script>
 
