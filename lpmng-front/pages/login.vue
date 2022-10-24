@@ -58,6 +58,21 @@
         </v-container>
       </v-form>
     </v-card>
+    <v-snackbar
+      v-model="snackbar"
+    >
+      Impossible de vous connecter. Avez-vous bien rentré vos informations ?
+
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          text
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
+          Fermer
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -68,6 +83,7 @@ export default {
   data () {
     return {
       loading: false,
+      snackbar: false,
       username: '',
       password: '',
       rules: {
@@ -80,18 +96,14 @@ export default {
       this.loading = true
       this.$store.getters['api/login'](this.username, this.password).then(res => {
         if (res) {
-        this.loading = false
-          this.$router.push('/')
+          this.loading = false
+          this.$router.push('/check')
         } else {
           this.loading = false
+          this.snackbar = true
           throw 'Error'
         }
       })
-      /*setTimeout(() => {
-        this.loading = false
-        this.$router.push('/')
-        this.$router.push('/no-internet')
-      }, 2000)*/
     }
   }
 }

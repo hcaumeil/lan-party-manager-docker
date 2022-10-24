@@ -164,7 +164,7 @@ export default {
       }).then(res => {
         if (res) {
           this.loading = false
-          this.$router.push('/')
+          this.$router.push('/check')
         } else {
           this.loading = false
           this.$router.push('/login')
