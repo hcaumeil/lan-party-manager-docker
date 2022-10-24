@@ -5,5 +5,5 @@ create table if not exists sessions
     mac         text                              not null,
     user_id     uuid,
     internet    boolean default false             not null,
-    date_time   timestamp                         not null
+    date_time   timestamp                         not null default now()
 );
