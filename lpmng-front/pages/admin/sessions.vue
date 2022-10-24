@@ -24,6 +24,32 @@
           disabled
         ></v-simple-checkbox>
       </template>
+
+      <template v-slot:item.date_time="{ item }">
+        <v-chip
+          class="ma-2"
+          color="primary"
+          outlined
+          pill
+        >
+          <v-icon left>
+            mdi-calendar-range
+          </v-icon>
+          {{ new Date(item.date_time).toLocaleDateString('fr-FR') }}
+        </v-chip>
+        <v-chip
+          class="ma-2"
+          color="primary"
+          outlined
+          pill
+        >
+          <v-icon left>
+            mdi-clock-outline
+          </v-icon>
+          {{ new Date(item.date_time).toLocaleTimeString('fr-FR') }}
+        </v-chip>
+      </template>
+
     </v-data-table>
   </v-card>
 </template>
@@ -69,7 +95,6 @@ export default {
   },
   middleware: ['auth', 'admin'],
   created () {
-    console.log('zeiofjzeoifj')
     this.$store.getters['api/sessions'].then(d => this.sessions = d)
   }
 }
