@@ -65,4 +65,5 @@ impl User {
 pub struct Credentials {
     pub biscuit: String,
     pub role: String,
+    pub user_id: Option<String>,
 }
