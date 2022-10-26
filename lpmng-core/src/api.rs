@@ -1,9 +1,9 @@
+use base64_url::{decode, encode, unescape};
 use biscuit_auth::PrivateKey;
 use lpmng_mq;
 use serde_json;
 use std::{convert::Infallible, path::Path};
 use warp::{self, Filter, Rejection, Reply};
-use base64_url::{encode, decode, unescape};
 
 use crate::{
     auth::{build_token, check_admin, hash},
@@ -68,7 +68,13 @@ pub async fn login_post(
                 let (role, id) = auth.expect("Can't be null");
 
                 match build_token(role.to_owned(), id, handler.auth_key) {
-                    Some(t) => return Ok(warp::reply::json(&Credentials { biscuit: t, role, user_id: Some(encode(&id.to_string())) })),
+                    Some(t) => {
+                        return Ok(warp::reply::json(&Credentials {
+                            biscuit: t,
+                            role,
+                            user_id: Some(encode(&id.to_string())),
+                        }))
+                    }
                     None => return Err(warp::reject()),
                 }
             } else {
@@ -137,9 +143,15 @@ pub async fn users_get(
     }
 }
 
-pub async fn user_get(id: String, handler: ApiHandler) -> Result<impl warp::Reply, warp::Rejection> {
+pub async fn user_get(
+    id: String,
+    handler: ApiHandler,
+) -> Result<impl warp::Reply, warp::Rejection> {
     let s = String::from_utf8(decode(&unescape(&id).into_owned()).unwrap()).unwrap();
-    let res = handler.db.get_user(u128::from_str_radix(&s, 10).unwrap()).await;
+    let res = handler
+        .db
+        .get_user(u128::from_str_radix(&s, 10).unwrap())
+        .await;
 
     match res {
         Some(json) => Ok(warp::reply::json(&json)),
