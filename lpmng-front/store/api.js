@@ -2,7 +2,8 @@ const target = {
   authenticated: false,
   endpoint: '/api',
   biscuit: '',
-  role: 'user'
+  role: 'user',
+  id: ''
 }
 
 const handler = {
@@ -53,6 +54,7 @@ export const getters = {
         console.log(creds)
         state.biscuit = creds.biscuit
         state.role = creds.role
+        state.id = creds.user_id
       }
       return state.authenticated
     })
@@ -92,6 +94,18 @@ export const getters = {
       throw 'Not connected'
     }
     return fetch(`${state.endpoint}/sessions`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.biscuit}`
+      }
+    }).then(res => res.json())
+  },
+  user: (state) => (id) => {
+    if (!state.authenticated) {
+      throw 'Not connected'
+    }
+    return fetch(`${state.endpoint}/users/${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
