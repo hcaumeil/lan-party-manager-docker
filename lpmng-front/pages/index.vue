@@ -36,6 +36,6 @@ export default {
       lastname: 'Lastname',
     }
   },
-  middleware: 'auth'
+  middleware: ['auth', 'bypass']
 }
 </script>
