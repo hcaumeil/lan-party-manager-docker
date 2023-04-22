@@ -38,6 +38,58 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
                 .add_addrs(&File::open("/etc/authorized_users").unwrap(), ip_vec);
             AgentResponse::success()
         }
+        "remove" => {
+            let ip = ip_to_u32(req.body.clone());
+
+            if ip.is_none() {
+                return AgentResponse::fail("unable to parse ip");
+            }
+
+            let mut ip_vec = Vec::new();
+            ip_vec.push(PfrAddr::new(IpAddr::V4(Ipv4Addr::from(ip.unwrap())), 0));
+
+            println!("[INFO] removing ip : {}", req.body);
+            let _ = PfTable::new("authorized_users")
+                .del_addrs(&File::open("/etc/authorized_users").unwrap(), ip_vec);
+            AgentResponse::success()
+        }
+
+        _ => AgentResponse {
+            success: false,
+            body: "unknown method".into(),
+        },
+    }
+}
+
+fn server_handler_test(req: RouterRequest) -> AgentResponse {
+    match req.action.as_str() {
+        "add" => {
+            let ip = ip_to_u32(req.body.clone());
+
+            if ip.is_none() {
+                return AgentResponse::fail("unable to parse ip");
+            }
+
+            let mut ip_vec = Vec::new();
+            ip_vec.push(PfrAddr::new(IpAddr::V4(Ipv4Addr::from(ip.unwrap())), 0));
+
+            println!("[INFO] adding ip : {}", req.body);
+            AgentResponse::success()
+        }
+        "remove" => {
+            let ip = ip_to_u32(req.body.clone());
+
+            if ip.is_none() {
+                return AgentResponse::fail("unable to parse ip");
+            }
+
+            let mut ip_vec = Vec::new();
+            ip_vec.push(PfrAddr::new(IpAddr::V4(Ipv4Addr::from(ip.unwrap())), 0));
+
+            println!("[INFO] removing ip : {}", req.body);
+            AgentResponse::success()
+        }
+
         _ => AgentResponse {
             success: false,
             body: "unknown method".into(),
@@ -59,7 +111,13 @@ fn env_get(env: &'static str) -> String {
 #[tokio::main]
 async fn main() {
     let router_address = env_get("ROUTER_ADDRESS");
-    let server = Server::new(&router_address, server_handler);
+
+    let server;
+    if std::env::var("TEST").is_ok() {
+        server = Server::new(&router_address, server_handler_test);
+    } else {
+        server = Server::new(&router_address, server_handler);
+    }
 
     println!("[INFO] server has started");
 
