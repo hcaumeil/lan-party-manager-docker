@@ -5,18 +5,16 @@ use serde::{Deserialize, Serialize};
 pub struct Session {
     pub id: Option<u128>,
     pub ip4: String,
-    pub mac: String,
     pub user_id: Option<u128>,
     pub internet: bool,
     pub date_time: NaiveDateTime,
 }
 
 impl Session {
-    pub fn new(ip4: String, mac: String) -> Self {
+    pub fn new(ip4: String) -> Self {
         Self {
             id: None,
             ip4,
-            mac,
             user_id: None,
             internet: false,
             date_time: NaiveDateTime::MIN,

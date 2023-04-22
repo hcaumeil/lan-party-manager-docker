@@ -41,11 +41,10 @@ impl DbHandler {
 
         match sqlx::query!(
             r#"
-INSERT INTO sessions (ip4, mac, user_id, internet, date_time)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO sessions (ip4, user_id, internet, date_time)
+VALUES ($1, $2, $3, $4)
         "#,
             session.ip4,
-            session.mac,
             user_id,
             session.internet,
             session.date_time
@@ -83,7 +82,6 @@ VALUES ($1, $2, $3, $4, $5)
                     res.push(Session {
                         id: Some(x.id.as_u128()),
                         ip4: x.ip4.to_string(),
-                        mac: x.mac.to_string(),
                         user_id,
                         internet: x.internet,
                         date_time: x.date_time,

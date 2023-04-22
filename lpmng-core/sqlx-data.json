@@ -14,28 +14,22 @@
           "type_info": "Text"
         },
         {
-          "name": "mac",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
           "name": "user_id",
-          "ordinal": 3,
+          "ordinal": 2,
           "type_info": "Uuid"
         },
         {
           "name": "internet",
-          "ordinal": 4,
+          "ordinal": 3,
           "type_info": "Bool"
         },
         {
           "name": "date_time",
-          "ordinal": 5,
+          "ordinal": 4,
           "type_info": "Timestamp"
         }
       ],
       "nullable": [
-        false,
         false,
         false,
         true,
@@ -187,6 +181,21 @@
     },
     "query": "\n                SELECT * FROM users\n                WHERE id=$1\n            "
   },
+  "a02f97abde3c89f46123264a2878c72888b7e6bfc82ae8329f2d8910b420ff73": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid",
+          "Bool",
+          "Timestamp"
+        ]
+      }
+    },
+    "query": "\nINSERT INTO sessions (ip4, user_id, internet, date_time)\nVALUES ($1, $2, $3, $4)\n        "
+  },
   "a394bbe93ed880cd8d56fb3c71aaae19da5b3b150d75f7daa7b8b5ed0bc099f8": {
     "describe": {
       "columns": [
@@ -252,21 +261,5 @@
       }
     },
     "query": "\n                SELECT * FROM users\n            "
-  },
-  "b64fc90c4d22290ddabdbef12c038b1deb7d0c0491dafa83dbe6596035df8e2a": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Uuid",
-          "Bool",
-          "Timestamp"
-        ]
-      }
-    },
-    "query": "\nINSERT INTO sessions (ip4, mac, user_id, internet, date_time)\nVALUES ($1, $2, $3, $4, $5)\n        "
   }
 }
