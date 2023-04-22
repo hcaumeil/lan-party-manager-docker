@@ -45,9 +45,21 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
     }
 }
 
+fn env_abort(env: &'static str) -> impl Fn(std::env::VarError) -> String {
+    move |e| {
+        eprintln!("[ERROR] ${env} is not set ({})", e);
+        std::process::exit(1);
+    }
+}
+
+fn env_get(env: &'static str) -> String {
+    std::env::var(env).unwrap_or_else(env_abort(env))
+}
+
 #[tokio::main]
 async fn main() {
-    let server = Server::new("127.0.0.1:8080", server_handler);
+    let router_address = env_get("ROUTER_ADDRESS");
+    let server = Server::new(&router_address, server_handler);
 
     println!("[INFO] server has started");
 

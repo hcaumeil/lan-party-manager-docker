@@ -8,17 +8,22 @@ use biscuit_auth::KeyPair;
 use lpmng_mq::client::Client;
 use warp::Filter;
 
+fn env_abort(env: &'static str) -> impl Fn(std::env::VarError) -> String {
+    move |e| {
+        eprintln!("[ERROR] ${env} is not set ({})", e);
+        std::process::exit(1);
+    }
+}
+
+fn env_get(env: &'static str) -> String {
+    std::env::var(env).unwrap_or_else(env_abort(env))
+}
+
 #[tokio::main]
 async fn main() {
-    let admin_key = std::env::var("ADMIN_KEY").unwrap_or_else(|e| {
-        eprintln!("[ERROR] $ADMIN_KEY is not set ({})", e);
-        std::process::exit(1);
-    });
-
-    let client_key = std::env::var("CLIENT_KEY").unwrap_or_else(|e| {
-        eprintln!("[ERROR] $CLIENT_KEY is not set ({})", e);
-        std::process::exit(1);
-    });
+    let admin_key = env_get("ADMIN_KEY");
+    let client_key = env_get("CLIENT_KEY");
+    let router_address = env_get("ROUTER_ADDRESS");
 
     println!("[INFO] api keys have been found");
 
@@ -26,13 +31,17 @@ async fn main() {
     println!("[INFO] database successfully connected");
 
     println!("[INFO] http server starting...");
-    warp::serve(public_route().or(api_routes(ApiHandler {
-        db: db_handler,
-        auth_key: KeyPair::new().private(),
-        admin_key,
-        client_key,
-        router: Client::connect("http://127.0.0.1:8080".into()).await.unwrap(),
-    })))
+    warp::serve(
+        public_route().or(api_routes(ApiHandler {
+            db: db_handler,
+            auth_key: KeyPair::new().private(),
+            admin_key,
+            client_key,
+            router: Client::connect(&router_address)
+                .await
+                .expect("lpmng router has not been found"),
+        })),
+    )
     .run(([127, 0, 0, 1], 3030))
     .await;
 }
