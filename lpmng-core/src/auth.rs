@@ -37,7 +37,7 @@ pub fn check_id(id: String, auth_token: String, private_key: PrivateKey) -> bool
         Ok(t) => {
             let mut auth = t.authorizer().unwrap();
 
-            auth.add_code(format!("allow if role(\"{id}\")"));
+            auth.add_code(format!("allow if id(\"{id}\")"));
 
             auth.authorize().is_ok()
         }
