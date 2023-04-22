@@ -127,11 +127,8 @@ export const getters = {
         Authorization: `Bearer ${state.biscuit}`
       }
     }).then(res => res.json())
-  }
-}
-
-export const mutations = {
-  session (state, data) {
+  },
+  post_session: state => (data) => {
     if (!state.authenticated) {
       throw 'Not connected'
     }
@@ -142,8 +139,13 @@ export const mutations = {
         Authorization: `Bearer ${state.biscuit}`
       },
       body: JSON.stringify(data)
-    }).then(res => res.ok)
-  },
+    }).then((res) => {
+      if (!res.ok) { throw '' }
+    })
+  }
+}
+
+export const mutations = {
   add (state, text) {
     state.list.push({
       text,
