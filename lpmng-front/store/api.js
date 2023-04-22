@@ -35,10 +35,10 @@ const proxy = new Proxy(target, handler)
 export const state = () => (proxy)
 
 export const getters = {
-  authenticated: (state) => state.authenticated,
-  is_admin: (state) => state.role === "admin",
-  is_the_user_admin: (state) => state.role === "admin" && !state.id,
-  login: (state) => (username, password) => {
+  authenticated: state => state.authenticated,
+  is_admin: state => state.role === 'admin',
+  is_the_user_admin: state => state.role === 'admin' && !state.id,
+  login: state => (username, password) => {
     return fetch(`${state.endpoint}/login`, {
       method: 'POST',
       headers: {
@@ -46,9 +46,9 @@ export const getters = {
       },
       body: JSON.stringify({
         login: username,
-        password: password
+        password
       })
-    }).then(async res => {
+    }).then(async (res) => {
       state.authenticated = res.ok
       if (state.authenticated) {
         const creds = await res.json()
@@ -60,19 +60,19 @@ export const getters = {
       return state.authenticated
     })
   },
-  register: (state) => (username, firstname, lastname, email, password, phone) => {
+  register: state => (username, firstname, lastname, email, password, phone) => {
     return fetch(`${state.endpoint}/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        username: username,
-        firstname: firstname,
-        lastname: lastname,
-        email: email,
-        password: password,
-        phone: phone,
+        username,
+        firstname,
+        lastname,
+        email,
+        password,
+        phone,
         role: 'user',
         is_allowed: false
       })
@@ -86,7 +86,7 @@ export const getters = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${state.biscuit}`
+        Authorization: `Bearer ${state.biscuit}`
       }
     }).then(res => res.json())
   },
@@ -98,11 +98,11 @@ export const getters = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${state.biscuit}`
+        Authorization: `Bearer ${state.biscuit}`
       }
     }).then(res => res.json())
   },
-  user: (state) => (id) => {
+  user: state => (id) => {
     if (!state.authenticated) {
       throw 'Not connected'
     }
@@ -110,7 +110,7 @@ export const getters = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${state.biscuit}`
+        Authorization: `Bearer ${state.biscuit}`
       }
     }).then(res => res.json())
   }
