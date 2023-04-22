@@ -119,7 +119,8 @@ pub async fn sessions_get(
 }
 
 pub async fn session_get(
-    id: i32,
+    id: u128,
+    auth_token: String,
     handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     Ok(warp::reply())
@@ -127,6 +128,7 @@ pub async fn session_get(
 
 pub async fn sessions_post(
     session: Session,
+    auth_token: String,
     handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     let res = match session.id {
@@ -214,12 +216,14 @@ pub fn sessions_routes(
     let get = warp::get()
         .and(warp::path("sessions"))
         .and(warp::path::param())
+        .and(warp::header::<String>("Authorization"))
         .and(with_handler(handler.clone()))
         .and_then(session_get);
 
     let post = warp::post()
         .and(warp::path("sessions"))
         .and(warp::body::json())
+        .and(warp::header::<String>("Authorization"))
         .and(with_handler(handler))
         .and_then(sessions_post);
 
