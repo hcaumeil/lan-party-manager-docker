@@ -10,6 +10,15 @@ pub struct ConsoleHandler {
     pub router: Option<Client>,
 }
 
+pub static BANNER: &str = "
+,_____,
+| === |    [::::::],     ,-#,    #-----[_]
+| === |    [::::::] \\   /  | \\   |
+| === |     |    |   '-'   |  \\  |  [_]-#
+| === |     |    |         |   \\ |      |
+|_____|-----#    @        [_]   '#------#
+";
+
 fn help() {
     println!("help : show this help");
     println!("exit : exit the console");
@@ -19,6 +28,7 @@ fn help() {
     println!("rrm / router-remove [ipv4] : remove an ip address");
     println!("dbc / db-connect : connect to the database");
     println!("dbu / db-users : get users from the database");
+    println!("banner : print banner");
     println!("");
 }
 
@@ -84,7 +94,7 @@ async fn db_get_users(handler: &mut ConsoleHandler) {
 
         if users.is_some() {
             println!("username firstname lastname role is_allowed");
-            println!("_____");
+            println!("-----");
 
             for u in users.unwrap() {
                 println!(
@@ -139,6 +149,7 @@ pub async fn console(mut handler: ConsoleHandler) {
             }
             "dbc" | "db-connect" => db_connect(&mut handler).await,
             "dbu" | "db-users" => db_get_users(&mut handler).await,
+            "banner" => println!("{}", BANNER),
             _ => eprintln!("error: this command does not exist"),
         }
     }
