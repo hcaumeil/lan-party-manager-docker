@@ -70,9 +70,6 @@ fn server_handler_test(req: RouterRequest) -> AgentResponse {
                 return AgentResponse::fail("unable to parse ip");
             }
 
-            let mut ip_vec = Vec::new();
-            ip_vec.push(PfrAddr::new(IpAddr::V4(Ipv4Addr::from(ip.unwrap())), 0));
-
             println!("[INFO] adding ip : {}", req.body);
             AgentResponse::success()
         }
@@ -82,9 +79,6 @@ fn server_handler_test(req: RouterRequest) -> AgentResponse {
             if ip.is_none() {
                 return AgentResponse::fail("unable to parse ip");
             }
-
-            let mut ip_vec = Vec::new();
-            ip_vec.push(PfrAddr::new(IpAddr::V4(Ipv4Addr::from(ip.unwrap())), 0));
 
             println!("[INFO] removing ip : {}", req.body);
             AgentResponse::success()
