@@ -1,7 +1,7 @@
 use biscuit_auth::{Biscuit, KeyPair, PrivateKey};
 use sha256::digest;
 
-pub fn build_token(role: String, id: u128, private_key: PrivateKey) -> Option<String> {
+pub fn build_token(role: String, id: String, private_key: PrivateKey) -> Option<String> {
     let root = KeyPair::from(private_key);
 
     let mut builder = Biscuit::builder(&root);
@@ -32,7 +32,7 @@ pub fn check_admin(auth_token: String, private_key: PrivateKey) -> bool {
     }
 }
 
-pub fn check_id(id: u128, auth_token: String, private_key: PrivateKey) -> bool {
+pub fn check_id(id: String, auth_token: String, private_key: PrivateKey) -> bool {
     match Biscuit::from_base64(auth_token, |_| private_key.public()) {
         Ok(t) => {
             let mut auth = t.authorizer().unwrap();

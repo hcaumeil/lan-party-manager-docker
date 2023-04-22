@@ -34,7 +34,7 @@ pub fn is_admin(auth_token: String, private_key: PrivateKey) -> bool {
     check_admin(split.nth(1).unwrap().into(), private_key)
 }
 
-pub fn is_user(id: u128, auth_token: String, private_key: PrivateKey) -> bool {
+pub fn is_user(id: String, auth_token: String, private_key: PrivateKey) -> bool {
     let mut split = auth_token.split(" ");
 
     if split.clone().count() != 2 {
@@ -59,15 +59,15 @@ pub async fn login_post(
                 || (login.as_str().unwrap() == "client"
                     && password.as_str().unwrap() == handler.client_key)
             {
-                match build_token("admin".into(), 0, handler.auth_key) {
+                return match build_token("admin".into(), "0".to_string(), handler.auth_key) {
                     Some(t) => {
-                        return Ok(warp::reply::json(&Credentials {
+                        Ok(warp::reply::json(&Credentials {
                             biscuit: t,
                             role: "admin".into(),
                             user_id: None,
                         }))
                     }
-                    None => return Err(warp::reject()),
+                    None => Err(warp::reject()),
                 }
             }
 
@@ -81,12 +81,12 @@ pub async fn login_post(
             if auth.is_some() {
                 let (role, id) = auth.expect("Can't be null");
 
-                match build_token(role.to_owned(), id, handler.auth_key) {
+                match build_token(role.to_owned(), id.clone(), handler.auth_key) {
                     Some(t) => {
                         return Ok(warp::reply::json(&Credentials {
                             biscuit: t,
                             role,
-                            user_id: Some(encode(&id.to_string())),
+                            user_id: Some(encode(&id)),
                         }))
                     }
                     None => return Err(warp::reject()),
@@ -119,11 +119,13 @@ pub async fn sessions_get(
 }
 
 pub async fn session_get(
-    id: u128,
+    id: String,
     auth_token: String,
     handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    if !is_admin(auth_token.clone(), handler.clone().auth_key) && !is_user(id, auth_token, handler.auth_key) {
+    let id = String::from_utf8(decode(&unescape(&id).into_owned()).unwrap()).unwrap();
+
+    if !is_admin(auth_token.clone(), handler.clone().auth_key) && !is_user(id.clone(), auth_token, handler.auth_key) {
         return Err(warp::reject());
     }
 
@@ -170,7 +172,7 @@ pub async fn user_get(
     let s = String::from_utf8(decode(&unescape(&id).into_owned()).unwrap()).unwrap();
     let res = handler
         .db
-        .get_user(u128::from_str_radix(&s, 10).unwrap())
+        .get_user(s.clone())
         .await;
 
     match res {

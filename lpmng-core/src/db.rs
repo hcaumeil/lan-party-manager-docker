@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use crate::auth::check_hash;
 use crate::models::{Session, User};
 use sqlx::postgres::PgPoolOptions;
@@ -35,7 +36,10 @@ impl DbHandler {
         };
 
         let user_id = match session.user_id {
-            Some(i) => Some(Uuid::from_u128(i)),
+            Some(i) => match Uuid::from_str(i.as_str()) {
+                Ok(u) => Some(u),
+                Err(_) => None
+            },
             None => None,
         };
 
@@ -62,22 +66,25 @@ VALUES ($1, $2, $3, $4)
         };
     }
 
-    pub async fn get_session_by_user_id(&self, id: u128) -> Option<Session> {
+    pub async fn get_session_by_user_id(&self, id: String) -> Option<Session> {
         return match sqlx::query!(
             r#"
                 SELECT * FROM sessions
                 WHERE user_id=$1
             "#,
-            Uuid::from_u128(id)
+            match Uuid::from_str(id.as_str()) {
+                Ok(u) => Some(u),
+                Err(_) => None
+            }
         )
             .fetch_one(&self.pool)
             .await
         {
             Ok(x) => Some(Session {
-                id: Some(x.id.as_u128()),
+                id: Some(x.id.as_hyphenated().to_string()),
                 ip4: x.ip4.to_string(),
                 user_id: match x.user_id {
-                    Some(i) => Some(i.as_u128()),
+                    Some(i) => Some(i.as_hyphenated().to_string()),
                     None => None,
                 },
                 internet: x.internet,
@@ -102,11 +109,11 @@ VALUES ($1, $2, $3, $4)
             Ok(q) => {
                 for x in &q {
                     let user_id = match x.user_id {
-                        Some(i) => Some(i.as_u128()),
+                        Some(i) => Some(i.as_hyphenated().to_string()),
                         None => None,
                     };
                     res.push(Session {
-                        id: Some(x.id.as_u128()),
+                        id: Some(x.id.as_hyphenated().to_string()),
                         ip4: x.ip4.to_string(),
                         user_id,
                         internet: x.internet,
@@ -184,7 +191,10 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             user.phone,
             user.role,
             user.is_allowed,
-            Uuid::from_u128(user.id.expect("[ASSERTION] could not get id"))
+            match Uuid::from_str(user.id.expect("[ASSERTION] could not get id").as_str()) {
+                Ok(u) => Some(u),
+                Err(_) => return false
+            }
         )
         .execute(&mut tx)
         .await
@@ -199,7 +209,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         };
     }
 
-    pub async fn check_password(&self, login: String, password: String) -> Option<(String, u128)> {
+    pub async fn check_password(&self, login: String, password: String) -> Option<(String, String)> {
         return match sqlx::query!(
             r#"
                 SELECT password, role, id FROM users
@@ -212,7 +222,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         {
             Ok(x) => {
                 if check_hash(password, x.password.to_string()) {
-                    Some((x.role.to_string(), x.id.as_u128()))
+                    Some((x.role.to_string(), x.id.as_hyphenated().to_string()))
                 } else {
                     None
                 }
@@ -221,19 +231,22 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         };
     }
 
-    pub async fn get_user(&self, id: u128) -> Option<User> {
+    pub async fn get_user(&self, id: String) -> Option<User> {
         return match sqlx::query!(
             r#"
                 SELECT * FROM users
                 WHERE id=$1
             "#,
-            Uuid::from_u128(id)
+            match Uuid::from_str(id.as_str()) {
+                Ok(u) => Some(u),
+                Err(_) => None
+            }
         )
         .fetch_one(&self.pool)
         .await
         {
             Ok(x) => Some(User {
-                id: Some(x.id.as_u128()),
+                id: Some(x.id.as_hyphenated().to_string()),
                 username: x.username.to_string(),
                 firstname: x.firstname.to_string(),
                 lastname: x.lastname.to_string(),
@@ -262,7 +275,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             Ok(q) => {
                 for x in &q {
                     res.push(User {
-                        id: Some(x.id.as_u128()),
+                        id: Some(x.id.as_hyphenated().to_string()),
                         username: x.username.to_string(),
                         firstname: x.firstname.to_string(),
                         lastname: x.lastname.to_string(),

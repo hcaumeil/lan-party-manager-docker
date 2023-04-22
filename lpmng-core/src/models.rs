@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct Session {
-    pub id: Option<u128>,
+    pub id: Option<String>,
     pub ip4: String,
-    pub user_id: Option<u128>,
+    pub user_id: Option<String>,
     pub internet: bool,
     pub date_time: NaiveDateTime,
 }
@@ -24,7 +24,7 @@ impl Session {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct User {
-    pub id: Option<u128>,
+    pub id: Option<String>,
     pub username: String,
     pub firstname: String,
     pub lastname: String,
