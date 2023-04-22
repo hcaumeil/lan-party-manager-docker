@@ -1,5 +1,5 @@
 use super::db::DbHandler;
-use lpmng_mq::client::agent::{AgentResponse, RouterRequest};
+use lpmng_mq::client::agent::RouterRequest;
 use lpmng_mq::client::Client;
 
 use std::io::Write;
@@ -15,7 +15,10 @@ fn help() {
     println!("exit : exit the console");
     println!("rc / router-connect : connect to the router ");
     println!("rp / router-ping : ping the router");
+    println!("radd / router-add [ipv4] : allow an ip address");
+    println!("rrm / router-remove [ipv4] : remove an ip address");
     println!("dbc / db-connect : connect to the database");
+    println!("dbu / db-users : get users from the database");
     println!("");
 }
 
@@ -37,7 +40,12 @@ async fn router_ping(handler: &mut ConsoleHandler) {
     }
 }
 
-async fn router_add(handler: &mut ConsoleHandler, args: &[&str]) {
+async fn router_ip_action(
+    handler: &mut ConsoleHandler,
+    args: &[&str],
+    action: &str,
+    success_msg: &str,
+) {
     if handler.router.is_some() {
         if args.len() > 0 {
             let res = handler
@@ -45,12 +53,12 @@ async fn router_add(handler: &mut ConsoleHandler, args: &[&str]) {
                 .as_mut()
                 .unwrap()
                 .send(RouterRequest {
-                    action: "add".to_owned(),
+                    action: action.to_owned(),
                     body: args[0].to_owned(),
                 })
                 .await;
             if res.success {
-                println!("ip has been added !");
+                println!("{}", success_msg);
             } else {
                 eprintln!("router error: {}", res.body);
             }
@@ -65,6 +73,28 @@ async fn db_connect(handler: &mut ConsoleHandler) {
 
     if handler.db_handler.is_some() {
         println!("Database successfully connected !");
+    }
+}
+
+async fn db_get_users(handler: &mut ConsoleHandler) {
+    handler.db_handler = DbHandler::connect().await;
+
+    if handler.db_handler.is_some() {
+        let users = handler.db_handler.as_mut().unwrap().get_users().await;
+
+        if users.is_some() {
+            println!("username firstname lastname role is_allowed");
+            println!("_____");
+
+            for u in users.unwrap() {
+                println!(
+                    "{} {} {} {} {}",
+                    u.username, u.firstname, u.lastname, u.role, u.is_allowed
+                );
+            }
+        }
+    } else {
+        eprintln!("There is no connection to the database, try command 'rdb'");
     }
 }
 
@@ -95,8 +125,20 @@ pub async fn console(mut handler: ConsoleHandler) {
             "exit" => return,
             "rc" | "router-connect" => router_connect(&mut handler).await,
             "rp" | "router-ping" => router_ping(&mut handler).await,
-            "radd" | "router-add" => router_add(&mut handler, &args[1..]).await,
+            "radd" | "router-add" => {
+                router_ip_action(&mut handler, &args[1..], "add", "ip successfully added !").await
+            }
+            "rrm" | "router-remove" => {
+                router_ip_action(
+                    &mut handler,
+                    &args[1..],
+                    "remove",
+                    "ip successfully removed !",
+                )
+                .await
+            }
             "dbc" | "db-connect" => db_connect(&mut handler).await,
+            "dbu" | "db-users" => db_get_users(&mut handler).await,
             _ => eprintln!("error: this command does not exist"),
         }
     }
