@@ -62,6 +62,32 @@ VALUES ($1, $2, $3, $4)
         };
     }
 
+    pub async fn get_session_by_user_id(&self, id: u128) -> Option<Session> {
+        return match sqlx::query!(
+            r#"
+                SELECT * FROM sessions
+                WHERE user_id=$1
+            "#,
+            Uuid::from_u128(id)
+        )
+            .fetch_one(&self.pool)
+            .await
+        {
+            Ok(x) => Some(Session {
+                id: Some(x.id.as_u128()),
+                ip4: x.ip4.to_string(),
+                user_id: match x.user_id {
+                    Some(i) => Some(i.as_u128()),
+                    None => None,
+                },
+                internet: x.internet,
+                date_time: x.date_time,
+            }),
+
+            Err(_) => None,
+        };
+    }
+
     pub async fn get_sessions(&self) -> Option<Vec<Session>> {
         let mut res: Vec<Session> = Vec::new();
 

@@ -123,7 +123,11 @@ pub async fn session_get(
     auth_token: String,
     handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    Ok(warp::reply())
+    if !is_admin(auth_token.clone(), handler.clone().auth_key) && !is_user(id, auth_token, handler.auth_key) {
+        return Err(warp::reject());
+    }
+
+    Ok(warp::reply::json(&handler.db.get_session_by_user_id(id).await))
 }
 
 pub async fn sessions_post(
