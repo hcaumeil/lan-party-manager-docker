@@ -114,10 +114,36 @@ export const getters = {
         Authorization: `Bearer ${state.biscuit}`
       }
     }).then(res => res.json())
+  },
+  session: state => (id) => {
+    if (!state.authenticated) {
+      throw 'Not connected'
+    }
+    if (!id) { id = state.id }
+    return fetch(`${state.endpoint}/sessions/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${state.biscuit}`
+      }
+    }).then(res => res.json())
   }
 }
 
 export const mutations = {
+  session (state, data) {
+    if (!state.authenticated) {
+      throw 'Not connected'
+    }
+    return fetch(`${state.endpoint}/sessions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${state.biscuit}`
+      },
+      body: JSON.stringify(data)
+    }).then(res => res.ok)
+  },
   add (state, text) {
     state.list.push({
       text,
