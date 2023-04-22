@@ -24,6 +24,10 @@ async fn main() {
     let admin_key = env_get("ADMIN_KEY");
     let client_key = env_get("CLIENT_KEY");
     let router_address = env_get("ROUTER_ADDRESS");
+    let port = match std::env::var("PORT") {
+        Ok(p) => p.parse::<u16>().unwrap_or(3030),
+        Err(_) => 3030,
+    };
 
     println!("[INFO] api keys have been found");
 
@@ -42,6 +46,6 @@ async fn main() {
                 .expect("lpmng router has not been found"),
         })),
     )
-    .run(([127, 0, 0, 1], 3030))
+    .run(([127, 0, 0, 1], port))
     .await;
 }
