@@ -106,6 +106,7 @@ export const getters = {
     if (!state.authenticated) {
       throw 'Not connected'
     }
+    if (!id) { id = state.id } // FIXME Check if we can get other users data
     return fetch(`${state.endpoint}/users/${id}`, {
       method: 'GET',
       headers: {
