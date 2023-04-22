@@ -32,6 +32,19 @@ pub fn check_admin(auth_token: String, private_key: PrivateKey) -> bool {
     }
 }
 
+pub fn check_id(id: u128, auth_token: String, private_key: PrivateKey) -> bool {
+    match Biscuit::from_base64(auth_token, |_| private_key.public()) {
+        Ok(t) => {
+            let mut auth = t.authorizer().unwrap();
+
+            auth.add_code(format!("allow if role(\"{id}\")"));
+
+            auth.authorize().is_ok()
+        }
+        Err(_) => false,
+    }
+}
+
 pub fn hash(input: String) -> String {
     digest(input)
 }

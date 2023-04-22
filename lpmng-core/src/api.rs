@@ -6,7 +6,7 @@ use std::{convert::Infallible, path::Path};
 use warp::{self, Filter, Rejection, Reply};
 
 use crate::{
-    auth::{build_token, check_admin, hash},
+    auth::{build_token, check_admin, check_id, hash},
     db::DbHandler,
     models::{Credentials, Session, User},
 };
@@ -32,6 +32,20 @@ pub fn is_admin(auth_token: String, private_key: PrivateKey) -> bool {
     }
 
     check_admin(split.nth(1).unwrap().into(), private_key)
+}
+
+pub fn is_user(id: u128, auth_token: String, private_key: PrivateKey) -> bool {
+    let mut split = auth_token.split(" ");
+
+    if split.clone().count() != 2 {
+        return false;
+    }
+
+    if split.clone().nth(0).unwrap() != "Bearer" {
+        return false;
+    }
+
+    check_id(id, split.nth(1).unwrap().into(), private_key)
 }
 
 pub async fn login_post(
