@@ -53,7 +53,18 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
                 .del_addrs(&File::open("/etc/authorized_users").unwrap(), ip_vec);
             AgentResponse::success()
         }
-
+        "get" => {
+            println!("[INFO] getting ips");
+            let _ = PfTable::new("authorized_users")
+                .get_addrs(&File::open("/etc/authorized_users").unwrap());
+            AgentResponse::success()
+        }
+        "clear" => {
+            println!("[INFO] clearing ips");
+            let _ = PfTable::new("authorized_users")
+                .clr_addrs(&File::open("/etc/authorized_users").unwrap());
+            AgentResponse::success()
+        }
         _ => AgentResponse {
             success: false,
             body: "unknown method".into(),
@@ -83,7 +94,14 @@ fn server_handler_test(req: RouterRequest) -> AgentResponse {
             println!("[INFO] removing ip : {}", req.body);
             AgentResponse::success()
         }
-
+        "get" => {
+            println!("[INFO] getting ips");
+            AgentResponse::success()
+        }
+        "clear" => {
+            println!("[INFO] clearing ips");
+            AgentResponse::success()
+        }
         _ => AgentResponse {
             success: false,
             body: "unknown method".into(),
