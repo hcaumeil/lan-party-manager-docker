@@ -5,7 +5,6 @@ use lpmng_mq::client::Client;
 
 use futures::executor;
 use std::collections::VecDeque;
-use std::io::Write;
 
 pub struct ConsoleHandler {
     pub db_handler: Option<DbHandler>,
@@ -33,6 +32,7 @@ fn help() {
     println!("rp / router-ping : ping the router");
     println!("radd / router-add [ipv4] : allow an ip address");
     println!("rrm / router-remove [ipv4] : remove an ip address");
+    println!("rget / router-get : get authorised ips");
     println!("dbc / db-connect : connect to the database");
     println!("dbu / db-users : get users from the database");
     println!("banner : print banner");
@@ -88,6 +88,29 @@ async fn router_ip_action(
             }
         } else {
             Err("error: this command need a valid ip address".to_owned())
+        }
+    } else {
+        Err("There is no connection to the router, try command 'rc'".to_owned())
+    }
+}
+
+async fn router_get(handler: &mut ConsoleHandler) -> Result<(), String> {
+    if handler.router.is_some() {
+        let res = handler
+            .router
+            .as_mut()
+            .unwrap()
+            .send(RouterRequest {
+                action: "get".to_string(),
+                body: "".to_string(),
+            })
+            .await;
+        if res.success {
+            println!("Authorized ips : \n");
+            println!("{}", res.body);
+            Ok(())
+        } else {
+            Err(format!("router error: {}", res.body))
         }
     } else {
         Err("There is no connection to the router, try command 'rc'".to_owned())
@@ -171,6 +194,7 @@ impl Default for ConsoleCompletion {
                 "rp".to_string(),
                 "radd".to_string(),
                 "rrm".to_string(),
+                "rget".to_string(),
                 "dbc".to_string(),
                 "dbu".to_string(),
                 "clear".to_string(),
@@ -225,6 +249,7 @@ async fn _command_executor(cmd: &str, mut handler: &mut ConsoleHandler) -> Resul
             )
             .await
         }
+        "rget" | "router-get" => router_get(&mut handler).await,
         "dbc" | "db-connect" => db_connect(&mut handler).await,
         "dbu" | "db-users" => db_get_users(&mut handler).await,
         "banner" => {
