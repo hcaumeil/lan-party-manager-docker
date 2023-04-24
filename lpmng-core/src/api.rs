@@ -270,13 +270,31 @@ pub fn login_routes(
         .and_then(login_post)
 }
 
+pub async fn get_ip(
+    addr: Option<SocketAddr>
+) -> Result<impl warp::Reply, warp::Rejection> {
+
+    match addr {
+        None => Err(warp::reject()),
+        Some(ip) => Ok(warp::reply::html(ip.ip().to_string()))
+    }
+}
+
+pub fn get_ip_route() -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
+    warp::get()
+        .and(warp::path("myip"))
+        .and(warp::addr::remote())
+        .and_then(get_ip)
+}
+
 pub fn api_routes(
     handler: ApiHandler,
 ) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     warp::path("api").and(
         sessions_routes(handler.clone())
             .or(users_routes(handler.clone()))
-            .or(login_routes(handler)),
+            .or(login_routes(handler))
+            .or(get_ip_route()),
     )
 }
 
