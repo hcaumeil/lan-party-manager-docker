@@ -66,7 +66,7 @@ async fn main() {
                     .expect("lpmng router has not been found"),
             })),
         )
-        .run(([127, 0, 0, 1], port))
+        .run(([0, 0, 0, 0], port))
         .await;
     }
 }
