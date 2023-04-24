@@ -55,9 +55,19 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
         }
         "get" => {
             println!("[INFO] getting ips");
-            let _ = PfTable::new("authorized_users")
+            let ips = PfTable::new("authorized_users")
                 .get_addrs(&File::open("/etc/authorized_users").unwrap());
-            AgentResponse::success()
+
+            let body = ips
+                .unwrap()
+                .into_iter()
+                .map(|ip| ip.addr.to_string())
+                .fold(String::from(""), |acc, e| acc + &e + "\n");
+
+            AgentResponse {
+                success: true,
+                body,
+            }
         }
         "clear" => {
             println!("[INFO] clearing ips");
