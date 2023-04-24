@@ -135,7 +135,7 @@ pub async fn session_get(
     Ok(warp::reply::json(&handler.db.get_session_by_user_id(id).await))
 }
 
-pub async fn sessions_post(
+pub async fn session_post(
     session: Session,
     auth_token: String,
     addr: Option<SocketAddr>,
@@ -356,7 +356,7 @@ pub fn sessions_routes(
         .and(warp::header::<String>("Authorization"))
         .and(warp::addr::remote())
         .and(with_handler(handler))
-        .and_then(sessions_post);
+        .and_then(session_post);
 
     get.or(list).or(post)
 }
