@@ -56,7 +56,7 @@ async fn main() {
 
         println!("[INFO] http server starting...");
         warp::serve(
-            public_route().or(api_routes(ApiHandler {
+            public_route(env_get("PUBLIC_DIR")).or(api_routes(ApiHandler {
                 db: db_handler,
                 auth_key: KeyPair::new().private(),
                 admin_key,

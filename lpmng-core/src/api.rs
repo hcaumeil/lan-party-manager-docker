@@ -423,11 +423,11 @@ pub fn api_routes(
     )
 }
 
-pub fn public_route() -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
+pub fn public_route(public: String) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     assert!(
-        Path::new("./src/public/").exists(),
+        Path::new(&public).exists(),
         "[ASSERTION] unable to find the static html directory"
     );
 
-    warp::get().and(warp::fs::dir("./src/public/"))
+    warp::get().and(warp::fs::dir(public))
 }

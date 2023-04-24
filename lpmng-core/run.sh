@@ -8,6 +8,7 @@ if [ ! "$(ls -A src/public)" ]; then
 fi
 export ADMIN_KEY=toto
 export CLIENT_KEY=titi
+export PUBLIC_DIR=./src/public/
 export ROUTER_ADDRESS="http://127.0.0.1:8080"
 export DATABASE_URL=postgres://corpau@localhost/lpmng
 sqlx migrate run
