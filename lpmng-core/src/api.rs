@@ -3,7 +3,10 @@ use biscuit_auth::PrivateKey;
 use lpmng_mq;
 use serde_json;
 use std::{convert::Infallible, path::Path};
+use std::net::SocketAddr;
+use chrono::Utc;
 use warp::{self, Filter, Rejection, Reply};
+use lpmng_mq::client::agent::RouterRequest;
 
 use crate::{
     auth::{build_token, check_admin, check_id, hash},
@@ -135,11 +138,132 @@ pub async fn session_get(
 pub async fn sessions_post(
     session: Session,
     auth_token: String,
-    handler: ApiHandler,
+    addr: Option<SocketAddr>,
+    mut handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    let res = match session.id {
-        Some(_) => false,
-        None => handler.db.insert_session(session).await,
+    if session.user_id.clone().is_none() || !is_user(session.user_id.clone().expect("Should have some user_id"), auth_token, handler.auth_key) {
+        return Err(warp::reject());
+    }
+
+    let addr = match addr {
+        None => return Err(warp::reject()),
+        Some(a) => a.ip().to_string()
+    };
+
+    let old_session = handler.db.get_session_by_user_id(session.user_id.clone().expect("Can't be none")).await;
+    let authorized = handler.db.get_user(session.user_id.clone().expect("Can't be none")).await.expect("Can't be none").is_allowed;
+
+    let res = match old_session {
+        None => {
+            match session.id {
+                None => {
+                    handler.db.insert_session(Session {
+                        id: None,
+                        ip4: addr,
+                        user_id: session.user_id,
+                        internet: false,
+                        date_time: Utc::now().naive_utc(),
+                    }).await
+                }
+                Some(_) => {
+                    false
+                }
+            }
+        }
+        Some(old) => {
+            match session.id {
+                None => {false}
+                Some(id) => {
+                    if  old.ip4 != addr {
+                        if old.internet {
+                            handler
+                                .router
+                                .send(RouterRequest {
+                                    action: "remove".to_string(),
+                                    body: old.ip4,
+                                })
+                                .await;
+                            if authorized && old.internet {
+                                handler
+                                    .router
+                                    .send(RouterRequest {
+                                        action: "add".to_string(),
+                                        body: addr.clone(),
+                                    })
+                                    .await;
+                                handler.db.update_session(Session {
+                                    id: Some(id),
+                                    ip4: addr,
+                                    user_id: old.user_id,
+                                    internet: true,
+                                    date_time: Utc::now().naive_utc(),
+                                }).await
+                            } else { false }
+                        } else {
+                            if authorized {
+                                handler
+                                    .router
+                                    .send(RouterRequest {
+                                        action: "add".to_string(),
+                                        body: addr.clone(),
+                                    })
+                                    .await;
+                                handler.db.update_session(Session {
+                                    id: Some(id),
+                                    ip4: addr,
+                                    user_id: old.user_id,
+                                    internet: true,
+                                    date_time: Utc::now().naive_utc(),
+                                }).await
+                            } else {
+                                false
+                            }
+                        }
+                    } else {
+                        if authorized && session.internet {
+                            if old.internet {
+                                false
+                            } else {
+                                handler
+                                    .router
+                                    .send(RouterRequest {
+                                        action: "add".to_string(),
+                                        body: addr.clone(),
+                                    })
+                                    .await;
+                                handler.db.update_session(Session {
+                                    id: Some(id),
+                                    ip4: addr,
+                                    user_id: old.user_id,
+                                    internet: true,
+                                    date_time: Utc::now().naive_utc(),
+                                }).await
+                            }
+                        } else {
+                            if session.internet {
+                                false
+                            } else {
+                                handler
+                                    .router
+                                    .send(RouterRequest {
+                                        action: "remove".to_string(),
+                                        body: addr.clone(),
+                                    })
+                                    .await;
+                                handler.db.update_session(Session {
+                                    id: Some(id),
+                                    ip4: addr,
+                                    user_id: old.user_id,
+                                    internet: false,
+                                    date_time: Utc::now().naive_utc(),
+                                }).await
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
     };
 
     if res {
@@ -230,6 +354,7 @@ pub fn sessions_routes(
         .and(warp::path("sessions"))
         .and(warp::body::json())
         .and(warp::header::<String>("Authorization"))
+        .and(warp::addr::remote())
         .and(with_handler(handler))
         .and_then(sessions_post);
 

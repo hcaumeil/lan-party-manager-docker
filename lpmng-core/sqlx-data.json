@@ -42,6 +42,22 @@
     },
     "query": "\n                SELECT * FROM sessions\n            "
   },
+  "073a498691c01e6949da2c1df187e61bffb2329d8aedd09c62c28bf1f9d618b4": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid",
+          "Bool",
+          "Timestamp",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            UPDATE sessions\n            SET ip4 = $1,\n            user_id = $2,\n            internet = $3,\n            date_time = $4\n            WHERE id=$5\n        "
+  },
   "09a2cbd52c357f3de0c61292973417e0abbf618f17bd3accb48622a9e662bb6c": {
     "describe": {
       "columns": [],

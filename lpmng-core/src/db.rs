@@ -95,6 +95,48 @@ VALUES ($1, $2, $3, $4)
         };
     }
 
+    pub async fn update_session(&self, session: Session) -> bool {
+        let mut tx = match self.pool.begin().await {
+            Ok(transaction) => transaction,
+            Err(_) => {
+                return false;
+            }
+        };
+
+        match sqlx::query!(
+            r#"
+            UPDATE sessions
+            SET ip4 = $1,
+            user_id = $2,
+            internet = $3,
+            date_time = $4
+            WHERE id=$5
+        "#,
+            session.ip4,
+            match Uuid::from_str(session.user_id.expect("[ASSERTION] could not get id").as_str()) {
+                Ok(u) => Some(u),
+                Err(_) => return false
+            },
+            session.internet,
+            session.date_time,
+            match Uuid::from_str(session.id.expect("[ASSERTION] could not get id").as_str()) {
+                Ok(u) => Some(u),
+                Err(_) => return false
+            }
+        )
+            .execute(&mut tx)
+            .await
+        {
+            Ok(_) => {}
+            Err(_) => return false,
+        };
+
+        return match tx.commit().await {
+            Ok(_) => true,
+            Err(_) => false,
+        };
+    }
+
     pub async fn get_sessions(&self) -> Option<Vec<Session>> {
         let mut res: Vec<Session> = Vec::new();
 
