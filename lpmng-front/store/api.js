@@ -142,6 +142,13 @@ export const getters = {
     }).then((res) => {
       if (!res.ok) { throw '' }
     })
+  },
+  myip: state => () => {
+    return fetch(`${state.endpoint}/myip`, {
+      method: 'GET',
+      headers: {
+      }
+    }).then(res => res.text())
   }
 }
 
