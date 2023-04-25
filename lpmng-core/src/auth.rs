@@ -24,7 +24,7 @@ pub fn check_admin(auth_token: String, private_key: PrivateKey) -> bool {
         Ok(t) => {
             let mut auth = t.authorizer().unwrap();
 
-            auth.add_code("allow if role(\"admin\")");
+            let _ = auth.add_code("allow if role(\"admin\")");
 
             auth.authorize().is_ok()
         }
@@ -37,7 +37,7 @@ pub fn check_id(id: String, auth_token: String, private_key: PrivateKey) -> bool
         Ok(t) => {
             let mut auth = t.authorizer().unwrap();
 
-            auth.add_code(format!("allow if id(\"{id}\")"));
+            let _ = auth.add_code(format!("allow if id(\"{id}\")"));
 
             auth.authorize().is_ok()
         }

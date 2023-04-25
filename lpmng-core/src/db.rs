@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use sqlx::postgres::PgPoolOptions;
 use sqlx::types::Uuid;
-use sqlx::{Error, PgPool, Postgres, Transaction};
+use sqlx::PgPool;
 
 use crate::auth::check_hash;
 use crate::models::{Session, User};
@@ -402,7 +402,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                     });
                 }
             }
-            Err(e) => return None,
+            Err(_) => return None,
         };
 
         Some(res)
