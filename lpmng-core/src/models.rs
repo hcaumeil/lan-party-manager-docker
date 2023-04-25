@@ -59,6 +59,18 @@ impl User {
     }
 }
 
+#[derive(Clone, Serialize, Deserialize)]
+pub struct UserPatch {
+    pub id: String,
+    pub username: Option<String>,
+    pub firstname: Option<String>,
+    pub lastname: Option<String>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub role: Option<String>,
+    pub is_allowed: Option<bool>,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct Credentials {
     pub biscuit: String,

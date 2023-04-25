@@ -13,6 +13,7 @@ use crate::{
     db::DbHandler,
     models::{Credentials, Session, User},
 };
+use crate::models::UserPatch;
 
 #[derive(Clone)]
 pub struct ApiHandler {
@@ -328,6 +329,102 @@ pub async fn user_post(
     }
 }
 
+pub async fn user_patch(
+    user: UserPatch,
+    auth_token: String,
+    mut handler: ApiHandler,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    if !is_admin(auth_token, handler.auth_key) {
+        return Err(warp::reject());
+    }
+
+    match handler.db.get_user(user.id.clone()).await {
+        None => return Err(warp::reject()),
+        Some(u) => {
+            let new = User {
+                id: Some(user.id.clone()),
+                username: user.username.unwrap_or(u.username),
+                firstname: user.firstname.unwrap_or(u.firstname),
+                lastname: user.lastname.unwrap_or(u.lastname),
+                email: user.email.unwrap_or(u.email),
+                password: u.password,
+                phone: user.phone.unwrap_or(u.phone),
+                role: user.role.unwrap_or(u.role),
+                is_allowed: user.is_allowed.unwrap_or(u.is_allowed),
+            };
+            handler.db.update_user(new).await;
+            if user.is_allowed == Some(false) {
+                match handler.db.get_session_by_user_id(user.id).await {
+                    None => {}
+                    Some(session) => {
+                        if session.internet {
+                            handler
+                                .router
+                                .send(RouterRequest {
+                                    action: "remove".to_string(),
+                                    body: session.ip4.clone(),
+                                })
+                                .await;
+                            if !handler.db.update_session(Session {
+                                id: session.id,
+                                ip4: session.ip4,
+                                user_id: session.user_id,
+                                internet: false,
+                                date_time: Utc::now().naive_utc(),
+                            }).await {
+                                return Err(warp::reject());
+                            }
+                        }
+
+                    }
+                }
+            }
+            Ok(warp::reply())
+        }
+    }
+}
+
+pub async fn user_delete(
+    user: UserPatch,
+    auth_token: String,
+    mut handler: ApiHandler,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    if !is_admin(auth_token, handler.auth_key) {
+        return Err(warp::reject());
+    }
+
+    match handler.db.get_user(user.id.clone()).await {
+        None => return Err(warp::reject()),
+        Some(u) => {
+            if u.is_allowed {
+                match handler.db.get_session_by_user_id(user.id.clone()).await {
+                    None => {}
+                    Some(session) => {
+                        if session.internet {
+                            handler
+                                .router
+                                .send(RouterRequest {
+                                    action: "remove".to_string(),
+                                    body: session.ip4.clone(),
+                                })
+                                .await;
+                        }
+                        if !handler.db.delete_session(session.id.unwrap()).await {
+                            return Err(warp::reject());
+                        }
+                    }
+                }
+            }
+
+            if handler.db.delete_user(user.id).await {
+                Ok(warp::reply())
+            } else {
+                Err(warp::reject())
+            }
+        }
+    }
+}
+
 fn with_handler(
     handler: ApiHandler,
 ) -> impl Filter<Extract = (ApiHandler,), Error = Infallible> + Clone {
@@ -379,10 +476,24 @@ pub fn users_routes(
     let post = warp::post()
         .and(warp::path("users"))
         .and(warp::body::json())
-        .and(with_handler(handler))
+        .and(with_handler(handler.clone()))
         .and_then(user_post);
 
-    get.or(list).or(post)
+    let patch = warp::patch()
+        .and(warp::path("users"))
+        .and(warp::body::json())
+        .and(warp::header::<String>("Authorization"))
+        .and(with_handler(handler.clone()))
+        .and_then(user_patch);
+
+    let delete = warp::delete()
+        .and(warp::path("users"))
+        .and(warp::body::json())
+        .and(warp::header::<String>("Authorization"))
+        .and(with_handler(handler))
+        .and_then(user_delete);
+
+    get.or(list).or(post).or(patch).or(delete)
 }
 
 pub fn login_routes(

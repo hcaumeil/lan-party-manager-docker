@@ -137,6 +137,37 @@ VALUES ($1, $2, $3, $4)
         };
     }
 
+    pub async fn delete_session(&self, id: String) -> bool {
+        let mut tx = match self.pool.begin().await {
+            Ok(transaction) => transaction,
+            Err(_) => {
+                return false;
+            }
+        };
+
+        match sqlx::query!(
+            r#"
+            DELETE FROM sessions
+            WHERE id=$1
+        "#,
+            match Uuid::from_str(id.as_str()) {
+                Ok(u) => Some(u),
+                Err(_) => return false
+            }
+        )
+            .execute(&mut tx)
+            .await
+        {
+            Ok(_) => {}
+            Err(_) => return false,
+        };
+
+        return match tx.commit().await {
+            Ok(_) => true,
+            Err(_) => false,
+        };
+    }
+
     pub async fn get_sessions(&self) -> Option<Vec<Session>> {
         let mut res: Vec<Session> = Vec::new();
 
@@ -240,6 +271,37 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         )
         .execute(&mut tx)
         .await
+        {
+            Ok(_) => {}
+            Err(_) => return false,
+        };
+
+        return match tx.commit().await {
+            Ok(_) => true,
+            Err(_) => false,
+        };
+    }
+
+    pub async fn delete_user(&self, id: String) -> bool {
+        let mut tx = match self.pool.begin().await {
+            Ok(transaction) => transaction,
+            Err(_) => {
+                return false;
+            }
+        };
+
+        match sqlx::query!(
+            r#"
+            DELETE FROM users
+            WHERE id=$1
+        "#,
+            match Uuid::from_str(id.as_str()) {
+                Ok(u) => Some(u),
+                Err(_) => return false
+            }
+        )
+            .execute(&mut tx)
+            .await
         {
             Ok(_) => {}
             Err(_) => return false,

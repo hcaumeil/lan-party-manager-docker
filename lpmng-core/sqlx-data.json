@@ -241,6 +241,30 @@
     },
     "query": "\n                SELECT * FROM users\n                WHERE id=$1\n            "
   },
+  "602436dd48a9e25456d6874e9fd2bb7e114b3206aa42e462b6725453fc19fa16": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM users\n            WHERE id=$1\n        "
+  },
+  "929616b72d3eae679a6f70d0424b0eba7b3e9eb877b2e0939570b04d3bddac5c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM sessions\n            WHERE id=$1\n        "
+  },
   "a02f97abde3c89f46123264a2878c72888b7e6bfc82ae8329f2d8910b420ff73": {
     "describe": {
       "columns": [],
