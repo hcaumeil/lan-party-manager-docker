@@ -292,8 +292,13 @@ pub async fn users_get(
 
 pub async fn user_get(
     id: String,
+    auth_token: String,
     handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    if !is_admin(auth_token.clone(), handler.clone().auth_key) && !is_user(id.clone(), auth_token, handler.auth_key) {
+        return Err(warp::reject());
+    }
+
     let s = String::from_utf8(decode(&unescape(&id).into_owned()).unwrap()).unwrap();
     let res = handler
         .db
@@ -470,6 +475,7 @@ pub fn users_routes(
     let get = warp::get()
         .and(warp::path("users"))
         .and(warp::path::param())
+        .and(warp::header::<String>("Authorization"))
         .and(with_handler(handler.clone()))
         .and_then(user_get);
 
