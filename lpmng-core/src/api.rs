@@ -321,15 +321,15 @@ pub async fn user_get(
     auth_token: String,
     handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    let id = String::from_utf8(decode(&unescape(&id).into_owned()).unwrap()).unwrap();
+
     if !is_admin(auth_token.clone(), handler.clone().auth_key)
         && !is_user(id.clone(), auth_token, handler.auth_key)
     {
         return Err(warp::reject());
     }
 
-    let s = String::from_utf8(decode(&unescape(&id).into_owned()).unwrap()).unwrap();
-    let res = handler.db.get_user(s.clone()).await;
-
+    let res = handler.db.get_user(id.clone()).await;
     match res {
         Some(json) => Ok(warp::reply::json(&json)),
         None => Err(warp::reject()),
