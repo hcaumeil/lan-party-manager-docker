@@ -115,6 +115,36 @@ export const getters = {
       }
     }).then(res => res.json())
   },
+  patch_user: state => (data) => {
+    if (!state.authenticated) {
+      throw 'Not connected'
+    }
+    return fetch(`${state.endpoint}/users`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${state.biscuit}`
+      },
+      body: JSON.stringify(data)
+    }).then((res) => {
+      if (!res.ok) { throw '' }
+    })
+  },
+  delete_user: state => (data) => {
+    if (!state.authenticated) {
+      throw 'Not connected'
+    }
+    return fetch(`${state.endpoint}/users`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${state.biscuit}`
+      },
+      body: JSON.stringify(data)
+    }).then((res) => {
+      if (!res.ok) { throw '' }
+    })
+  },
   session: state => (id) => {
     if (!state.authenticated) {
       throw 'Not connected'
