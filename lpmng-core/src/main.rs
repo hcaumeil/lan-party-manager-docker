@@ -1,14 +1,15 @@
+use biscuit_auth::KeyPair;
+use warp::Filter;
+
+use api::{api_routes, public_route, ApiHandler};
+use console::{console, ConsoleHandler, BANNER};
+use lpmng_mq::client::Client;
+
 mod api;
 mod auth;
 mod console;
 mod db;
 mod models;
-
-use api::{api_routes, public_route, ApiHandler};
-use biscuit_auth::KeyPair;
-use console::{console, ConsoleHandler, BANNER};
-use lpmng_mq::client::Client;
-use warp::Filter;
 
 fn env_abort(env: &'static str) -> impl Fn(std::env::VarError) -> String {
     move |e| {

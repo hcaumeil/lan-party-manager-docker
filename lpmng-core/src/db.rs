@@ -1,9 +1,11 @@
 use std::str::FromStr;
-use crate::auth::check_hash;
-use crate::models::{Session, User};
+
 use sqlx::postgres::PgPoolOptions;
 use sqlx::types::Uuid;
 use sqlx::{Error, PgPool, Postgres, Transaction};
+
+use crate::auth::check_hash;
+use crate::models::{Session, User};
 
 #[derive(Clone, Debug)]
 pub struct DbHandler {
@@ -38,7 +40,7 @@ impl DbHandler {
         let user_id = match session.user_id {
             Some(i) => match Uuid::from_str(i.as_str()) {
                 Ok(u) => Some(u),
-                Err(_) => None
+                Err(_) => None,
             },
             None => None,
         };
@@ -74,11 +76,11 @@ VALUES ($1, $2, $3, $4)
             "#,
             match Uuid::from_str(id.as_str()) {
                 Ok(u) => Some(u),
-                Err(_) => None
+                Err(_) => None,
             }
         )
-            .fetch_one(&self.pool)
-            .await
+        .fetch_one(&self.pool)
+        .await
         {
             Ok(x) => Some(Session {
                 id: Some(x.id.as_hyphenated().to_string()),
@@ -113,19 +115,24 @@ VALUES ($1, $2, $3, $4)
             WHERE id=$5
         "#,
             session.ip4,
-            match Uuid::from_str(session.user_id.expect("[ASSERTION] could not get id").as_str()) {
+            match Uuid::from_str(
+                session
+                    .user_id
+                    .expect("[ASSERTION] could not get id")
+                    .as_str()
+            ) {
                 Ok(u) => Some(u),
-                Err(_) => return false
+                Err(_) => return false,
             },
             session.internet,
             session.date_time,
             match Uuid::from_str(session.id.expect("[ASSERTION] could not get id").as_str()) {
                 Ok(u) => Some(u),
-                Err(_) => return false
+                Err(_) => return false,
             }
         )
-            .execute(&mut tx)
-            .await
+        .execute(&mut tx)
+        .await
         {
             Ok(_) => {}
             Err(_) => return false,
@@ -152,11 +159,11 @@ VALUES ($1, $2, $3, $4)
         "#,
             match Uuid::from_str(id.as_str()) {
                 Ok(u) => Some(u),
-                Err(_) => return false
+                Err(_) => return false,
             }
         )
-            .execute(&mut tx)
-            .await
+        .execute(&mut tx)
+        .await
         {
             Ok(_) => {}
             Err(_) => return false,
@@ -266,7 +273,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             user.is_allowed,
             match Uuid::from_str(user.id.expect("[ASSERTION] could not get id").as_str()) {
                 Ok(u) => Some(u),
-                Err(_) => return false
+                Err(_) => return false,
             }
         )
         .execute(&mut tx)
@@ -297,11 +304,11 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         "#,
             match Uuid::from_str(id.as_str()) {
                 Ok(u) => Some(u),
-                Err(_) => return false
+                Err(_) => return false,
             }
         )
-            .execute(&mut tx)
-            .await
+        .execute(&mut tx)
+        .await
         {
             Ok(_) => {}
             Err(_) => return false,
@@ -313,7 +320,11 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         };
     }
 
-    pub async fn check_password(&self, login: String, password: String) -> Option<(String, String)> {
+    pub async fn check_password(
+        &self,
+        login: String,
+        password: String,
+    ) -> Option<(String, String)> {
         return match sqlx::query!(
             r#"
                 SELECT password, role, id FROM users
@@ -343,7 +354,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             "#,
             match Uuid::from_str(id.as_str()) {
                 Ok(u) => Some(u),
-                Err(_) => None
+                Err(_) => None,
             }
         )
         .fetch_one(&self.pool)

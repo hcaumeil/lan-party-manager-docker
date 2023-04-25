@@ -1,19 +1,21 @@
+use std::net::SocketAddr;
+use std::{convert::Infallible, path::Path};
+
 use base64_url::{decode, encode, unescape};
 use biscuit_auth::PrivateKey;
-use lpmng_mq;
-use serde_json;
-use std::{convert::Infallible, path::Path};
-use std::net::SocketAddr;
 use chrono::Utc;
+use serde_json;
 use warp::{self, Filter, Rejection, Reply};
+
+use lpmng_mq;
 use lpmng_mq::client::agent::RouterRequest;
 
+use crate::models::UserPatch;
 use crate::{
     auth::{build_token, check_admin, check_id, hash},
     db::DbHandler,
     models::{Credentials, Session, User},
 };
-use crate::models::UserPatch;
 
 #[derive(Clone)]
 pub struct ApiHandler {
@@ -56,7 +58,7 @@ pub async fn login_post(
     json: serde_json::Value,
     handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    if let Some(login) = json.get("login") {
+    return if let Some(login) = json.get("login") {
         if let Some(password) = json.get("password") {
             if (login.as_str().unwrap() == "admin"
                 && password.as_str().unwrap() == handler.admin_key)
@@ -64,15 +66,13 @@ pub async fn login_post(
                     && password.as_str().unwrap() == handler.client_key)
             {
                 return match build_token("admin".into(), "0".to_string(), handler.auth_key) {
-                    Some(t) => {
-                        Ok(warp::reply::json(&Credentials {
-                            biscuit: t,
-                            role: "admin".into(),
-                            user_id: None,
-                        }))
-                    }
+                    Some(t) => Ok(warp::reply::json(&Credentials {
+                        biscuit: t,
+                        role: "admin".into(),
+                        user_id: None,
+                    })),
                     None => Err(warp::reject()),
-                }
+                };
             }
 
             let auth = handler
@@ -86,24 +86,22 @@ pub async fn login_post(
                 let (role, id) = auth.expect("Can't be null");
 
                 match build_token(role.to_owned(), id.clone(), handler.auth_key) {
-                    Some(t) => {
-                        return Ok(warp::reply::json(&Credentials {
-                            biscuit: t,
-                            role,
-                            user_id: Some(encode(&id)),
-                        }))
-                    }
-                    None => return Err(warp::reject()),
+                    Some(t) => Ok(warp::reply::json(&Credentials {
+                        biscuit: t,
+                        role,
+                        user_id: Some(encode(&id)),
+                    })),
+                    None => Err(warp::reject()),
                 }
             } else {
-                return Err(warp::reject());
+                Err(warp::reject())
             }
         } else {
-            return Err(warp::reject());
+            Err(warp::reject())
         }
     } else {
-        return Err(warp::reject());
-    }
+        Err(warp::reject())
+    };
 }
 
 pub async fn sessions_get(
@@ -129,11 +127,15 @@ pub async fn session_get(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     let id = String::from_utf8(decode(&unescape(&id).into_owned()).unwrap()).unwrap();
 
-    if !is_admin(auth_token.clone(), handler.clone().auth_key) && !is_user(id.clone(), auth_token, handler.auth_key) {
+    if !is_admin(auth_token.clone(), handler.clone().auth_key)
+        && !is_user(id.clone(), auth_token, handler.auth_key)
+    {
         return Err(warp::reject());
     }
 
-    Ok(warp::reply::json(&handler.db.get_session_by_user_id(id).await))
+    Ok(warp::reply::json(
+        &handler.db.get_session_by_user_id(id).await,
+    ))
 }
 
 pub async fn session_post(
@@ -142,129 +144,153 @@ pub async fn session_post(
     addr: Option<SocketAddr>,
     mut handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    if session.user_id.clone().is_none() || !is_user(session.user_id.clone().expect("Should have some user_id"), auth_token, handler.auth_key) {
+    if session.user_id.clone().is_none()
+        || !is_user(
+            session.user_id.clone().expect("Should have some user_id"),
+            auth_token,
+            handler.auth_key,
+        )
+    {
         return Err(warp::reject());
     }
 
     let addr = match addr {
         None => return Err(warp::reject()),
-        Some(a) => a.ip().to_string()
+        Some(a) => a.ip().to_string(),
     };
 
-    let old_session = handler.db.get_session_by_user_id(session.user_id.clone().expect("Can't be none")).await;
-    let authorized = handler.db.get_user(session.user_id.clone().expect("Can't be none")).await.expect("Can't be none").is_allowed;
+    let old_session = handler
+        .db
+        .get_session_by_user_id(session.user_id.clone().expect("Can't be none"))
+        .await;
+    let authorized = handler
+        .db
+        .get_user(session.user_id.clone().expect("Can't be none"))
+        .await
+        .expect("Can't be none")
+        .is_allowed;
 
     let res = match old_session {
-        None => {
-            match session.id {
-                None => {
-                    handler.db.insert_session(Session {
+        None => match session.id {
+            None => {
+                handler
+                    .db
+                    .insert_session(Session {
                         id: None,
                         ip4: addr,
                         user_id: session.user_id,
                         internet: false,
                         date_time: Utc::now().naive_utc(),
-                    }).await
-                }
-                Some(_) => {
-                    false
-                }
+                    })
+                    .await
             }
-        }
-        Some(old) => {
-            match session.id {
-                None => {false}
-                Some(id) => {
-                    if  old.ip4 != addr {
+            Some(_) => false,
+        },
+        Some(old) => match session.id {
+            None => false,
+            Some(id) => {
+                if old.ip4 != addr {
+                    if old.internet {
+                        handler
+                            .router
+                            .send(RouterRequest {
+                                action: "remove".to_string(),
+                                body: old.ip4,
+                            })
+                            .await;
+                        if authorized && old.internet {
+                            handler
+                                .router
+                                .send(RouterRequest {
+                                    action: "add".to_string(),
+                                    body: addr.clone(),
+                                })
+                                .await;
+                            handler
+                                .db
+                                .update_session(Session {
+                                    id: Some(id),
+                                    ip4: addr,
+                                    user_id: old.user_id,
+                                    internet: true,
+                                    date_time: Utc::now().naive_utc(),
+                                })
+                                .await
+                        } else {
+                            false
+                        }
+                    } else {
+                        if authorized {
+                            handler
+                                .router
+                                .send(RouterRequest {
+                                    action: "add".to_string(),
+                                    body: addr.clone(),
+                                })
+                                .await;
+                            handler
+                                .db
+                                .update_session(Session {
+                                    id: Some(id),
+                                    ip4: addr,
+                                    user_id: old.user_id,
+                                    internet: true,
+                                    date_time: Utc::now().naive_utc(),
+                                })
+                                .await
+                        } else {
+                            false
+                        }
+                    }
+                } else {
+                    if authorized && session.internet {
                         if old.internet {
+                            false
+                        } else {
+                            handler
+                                .router
+                                .send(RouterRequest {
+                                    action: "add".to_string(),
+                                    body: addr.clone(),
+                                })
+                                .await;
+                            handler
+                                .db
+                                .update_session(Session {
+                                    id: Some(id),
+                                    ip4: addr,
+                                    user_id: old.user_id,
+                                    internet: true,
+                                    date_time: Utc::now().naive_utc(),
+                                })
+                                .await
+                        }
+                    } else {
+                        if session.internet {
+                            false
+                        } else {
                             handler
                                 .router
                                 .send(RouterRequest {
                                     action: "remove".to_string(),
-                                    body: old.ip4,
+                                    body: addr.clone(),
                                 })
                                 .await;
-                            if authorized && old.internet {
-                                handler
-                                    .router
-                                    .send(RouterRequest {
-                                        action: "add".to_string(),
-                                        body: addr.clone(),
-                                    })
-                                    .await;
-                                handler.db.update_session(Session {
-                                    id: Some(id),
-                                    ip4: addr,
-                                    user_id: old.user_id,
-                                    internet: true,
-                                    date_time: Utc::now().naive_utc(),
-                                }).await
-                            } else { false }
-                        } else {
-                            if authorized {
-                                handler
-                                    .router
-                                    .send(RouterRequest {
-                                        action: "add".to_string(),
-                                        body: addr.clone(),
-                                    })
-                                    .await;
-                                handler.db.update_session(Session {
-                                    id: Some(id),
-                                    ip4: addr,
-                                    user_id: old.user_id,
-                                    internet: true,
-                                    date_time: Utc::now().naive_utc(),
-                                }).await
-                            } else {
-                                false
-                            }
-                        }
-                    } else {
-                        if authorized && session.internet {
-                            if old.internet {
-                                false
-                            } else {
-                                handler
-                                    .router
-                                    .send(RouterRequest {
-                                        action: "add".to_string(),
-                                        body: addr.clone(),
-                                    })
-                                    .await;
-                                handler.db.update_session(Session {
-                                    id: Some(id),
-                                    ip4: addr,
-                                    user_id: old.user_id,
-                                    internet: true,
-                                    date_time: Utc::now().naive_utc(),
-                                }).await
-                            }
-                        } else {
-                            if session.internet {
-                                false
-                            } else {
-                                handler
-                                    .router
-                                    .send(RouterRequest {
-                                        action: "remove".to_string(),
-                                        body: addr.clone(),
-                                    })
-                                    .await;
-                                handler.db.update_session(Session {
+                            handler
+                                .db
+                                .update_session(Session {
                                     id: Some(id),
                                     ip4: addr,
                                     user_id: old.user_id,
                                     internet: false,
                                     date_time: Utc::now().naive_utc(),
-                                }).await
-                            }
+                                })
+                                .await
                         }
                     }
-
                 }
             }
-        }
+        },
     };
 
     if res {
@@ -295,15 +321,14 @@ pub async fn user_get(
     auth_token: String,
     handler: ApiHandler,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    if !is_admin(auth_token.clone(), handler.clone().auth_key) && !is_user(id.clone(), auth_token, handler.auth_key) {
+    if !is_admin(auth_token.clone(), handler.clone().auth_key)
+        && !is_user(id.clone(), auth_token, handler.auth_key)
+    {
         return Err(warp::reject());
     }
 
     let s = String::from_utf8(decode(&unescape(&id).into_owned()).unwrap()).unwrap();
-    let res = handler
-        .db
-        .get_user(s.clone())
-        .await;
+    let res = handler.db.get_user(s.clone()).await;
 
     match res {
         Some(json) => Ok(warp::reply::json(&json)),
@@ -370,17 +395,20 @@ pub async fn user_patch(
                                     body: session.ip4.clone(),
                                 })
                                 .await;
-                            if !handler.db.update_session(Session {
-                                id: session.id,
-                                ip4: session.ip4,
-                                user_id: session.user_id,
-                                internet: false,
-                                date_time: Utc::now().naive_utc(),
-                            }).await {
+                            if !handler
+                                .db
+                                .update_session(Session {
+                                    id: session.id,
+                                    ip4: session.ip4,
+                                    user_id: session.user_id,
+                                    internet: false,
+                                    date_time: Utc::now().naive_utc(),
+                                })
+                                .await
+                            {
                                 return Err(warp::reject());
                             }
                         }
-
                     }
                 }
             }
@@ -512,13 +540,10 @@ pub fn login_routes(
         .and_then(login_post)
 }
 
-pub async fn get_ip(
-    addr: Option<SocketAddr>
-) -> Result<impl warp::Reply, warp::Rejection> {
-
+pub async fn get_ip(addr: Option<SocketAddr>) -> Result<impl warp::Reply, warp::Rejection> {
     match addr {
         None => Err(warp::reject()),
-        Some(ip) => Ok(warp::reply::html(ip.ip().to_string()))
+        Some(ip) => Ok(warp::reply::html(ip.ip().to_string())),
     }
 }
 
@@ -540,7 +565,9 @@ pub fn api_routes(
     )
 }
 
-pub fn public_route(public: String) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
+pub fn public_route(
+    public: String,
+) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     assert!(
         Path::new(&public).exists(),
         "[ASSERTION] unable to find the static html directory"

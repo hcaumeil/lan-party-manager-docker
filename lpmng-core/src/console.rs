@@ -1,10 +1,12 @@
-use super::db::DbHandler;
+use std::collections::VecDeque;
+
 use dialoguer::{theme::ColorfulTheme, Completion, History, Input};
+use futures::executor;
+
 use lpmng_mq::client::agent::RouterRequest;
 use lpmng_mq::client::Client;
 
-use futures::executor;
-use std::collections::VecDeque;
+use super::db::DbHandler;
 
 pub struct ConsoleHandler {
     pub db_handler: Option<DbHandler>,
