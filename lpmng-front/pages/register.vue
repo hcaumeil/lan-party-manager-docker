@@ -30,7 +30,7 @@
             prepend-inner-icon="mdi-account"
             :disabled="loading"
             outlined
-          ></v-text-field>
+          />
           <v-text-field
             v-model="firstname"
             :rules="[rules.required]"
@@ -39,7 +39,7 @@
             prepend-inner-icon="mdi-account"
             :disabled="loading"
             outlined
-          ></v-text-field>
+          />
           <v-text-field
             v-model="lastname"
             :rules="[rules.required]"
@@ -48,7 +48,7 @@
             prepend-inner-icon="mdi-account"
             :disabled="loading"
             outlined
-          ></v-text-field>
+          />
           <v-text-field
             v-model="email"
             :rules="[rules.required, rules.email]"
@@ -58,7 +58,7 @@
             type="email"
             :disabled="loading"
             outlined
-          ></v-text-field>
+          />
           <v-text-field
             v-model="phone"
             :rules="[rules.required, rules.phone]"
@@ -68,7 +68,7 @@
             type="phone"
             :disabled="loading"
             outlined
-          ></v-text-field>
+          />
           <v-text-field
             v-model="password"
             :rules="[rules.required]"
@@ -78,7 +78,7 @@
             type="password"
             :disabled="loading"
             outlined
-          ></v-text-field>
+          />
           <v-text-field
             v-model="passwordConfirmation"
             :rules="[rules.required, rules.passwordMatch]"
@@ -88,7 +88,7 @@
             type="password"
             :disabled="loading"
             outlined
-          ></v-text-field>
+          />
           <v-btn
             depressed
             block
@@ -108,7 +108,7 @@
     >
       Impossible de créer votre compte
 
-      <template v-slot:action="{ attrs }">
+      <template #action="{ attrs }">
         <v-btn
           text
           v-bind="attrs"
@@ -125,6 +125,7 @@
 export default {
   name: 'RegisterPage',
   layout: 'kiosk',
+  middleware: 'notconnected',
   data () {
     return {
       loading: false,
@@ -138,11 +139,11 @@ export default {
       phone: '',
       rules: {
         required: value => !!value || 'Requis.',
-        email: value => {
+        email: (value) => {
           const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
           return pattern.test(value) || 'Addresse email invalide.'
         },
-        phone: value => {
+        phone: (value) => {
           const pattern = /^\+33[67]\d{8}$|^0[67]\d{8}$/
           return pattern.test(value) || 'Numéro de téléphone invalide.'
         },
@@ -153,7 +154,7 @@ export default {
   methods: {
     register () {
       this.loading = true
-      this.$store.getters['api/register'](this.username, this.firstname, this.lastname, this.email, this.password, this.phone).then(res => {
+      this.$store.getters['api/register'](this.username, this.firstname, this.lastname, this.email, this.password, this.phone).then((res) => {
         if (res.ok) {
           return this.$store.getters['api/login'](this.username, this.password)
         } else {
@@ -161,7 +162,7 @@ export default {
           this.snackbar = true
           throw 'Error'
         }
-      }).then(res => {
+      }).then((res) => {
         if (res) {
           this.loading = false
           this.$router.push('/check')

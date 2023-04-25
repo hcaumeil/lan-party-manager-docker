@@ -9,7 +9,7 @@
       style="backdrop-filter: blur(30px); background-color: #1e1e1eaa"
     >
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <NuxtLink to="/register">
           <v-btn
             rounded
@@ -33,7 +33,7 @@
             prepend-inner-icon="mdi-account"
             :disabled="loading"
             outlined
-          ></v-text-field>
+          />
           <v-text-field
             v-model="password"
             :rules="[rules.required]"
@@ -43,7 +43,7 @@
             type="password"
             :disabled="loading"
             outlined
-          ></v-text-field>
+          />
           <v-btn
             depressed
             block
@@ -63,7 +63,7 @@
     >
       Impossible de vous connecter. Avez-vous bien rentré vos informations ?
 
-      <template v-slot:action="{ attrs }">
+      <template #action="{ attrs }">
         <v-btn
           text
           v-bind="attrs"
@@ -80,6 +80,7 @@
 export default {
   name: 'LoginPage',
   layout: 'kiosk',
+  middleware: 'notconnected',
   data () {
     return {
       loading: false,
@@ -94,7 +95,7 @@ export default {
   methods: {
     login () {
       this.loading = true
-      this.$store.getters['api/login'](this.username, this.password).then(res => {
+      this.$store.getters['api/login'](this.username, this.password).then((res) => {
         if (res) {
           this.loading = false
           this.$router.push('/check')
