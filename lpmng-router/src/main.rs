@@ -47,32 +47,40 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
             ip_vec.push(PfrAddr::new(IpAddr::V4(Ipv4Addr::from(ip.unwrap())), 0));
 
             println!("[INFO] removing ip : {}", req.body);
-            let _ = PfTable::new("authorized_users").del_addrs(
-                &fs::OpenOptions::new().write(true).open("/dev/pf").unwrap(),
-                ip_vec,
-            );
+            _ = std::process::Command::new("pfctl")
+                .args(["-t", "authorized_users", "-T", "remove", &req.body])
+                .output();
+
             AgentResponse::success()
         }
         "get" => {
             println!("[INFO] getting ips");
-            let ips = PfTable::new("authorized_users")
-                .get_addrs(&fs::OpenOptions::new().write(true).open("/dev/pf").unwrap());
 
-            let body = ips
-                .unwrap()
-                .into_iter()
-                .map(|ip| ip.addr.to_string())
-                .fold(String::from(""), |acc, e| acc + &e + "\n");
+            let ips = std::process::Command::new("pfctl")
+                .args(["-t", "authorized_users", "-T", "show"])
+                .output();
 
-            AgentResponse {
-                success: true,
-                body,
+            if ips.is_err() {
+                return AgentResponse::fail("no output");
+            }
+
+            match ips {
+                Ok(ips) => {
+                    let body = String::from_utf8_lossy(&ips.stdout).to_string();
+
+                    AgentResponse {
+                        success: true,
+                        body,
+                    }
+                }
+                Err(_) => AgentResponse::fail("no output"),
             }
         }
         "clear" => {
             println!("[INFO] clearing ips");
-            let _ = PfTable::new("authorized_users")
-                .clr_addrs(&fs::OpenOptions::new().write(true).open("/dev/pf").unwrap());
+            _ = std::process::Command::new("pfctl")
+                .args(["-t", "authorized_users", "-T", "flush"])
+                .output();
             AgentResponse::success()
         }
         _ => AgentResponse {
