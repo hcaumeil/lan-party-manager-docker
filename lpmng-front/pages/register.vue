@@ -5,7 +5,7 @@
       class="pa-2 rounded-lg"
       max-width="800"
       min-width="320"
-      width="40vw"
+      width="50vw"
       max-height="calc(100vh - 15vw - 60px)"
       style="backdrop-filter: blur(30px); background-color: #1e1e1eaa; overflow: auto;"
     >
@@ -20,7 +20,9 @@
       </v-card-actions>
       <v-card-title>Inscription</v-card-title>
       <v-card-subtitle>Connectez-vous afin d'accéder à internet</v-card-subtitle>
-      <v-form>
+      <v-form
+        v-model="valid"
+      >
         <v-container>
           <v-text-field
             v-model="username"
@@ -89,13 +91,24 @@
             :disabled="loading"
             outlined
           />
+          <v-row
+            style="margin-bottom: 50px"
+          >
+            <v-simple-checkbox
+              v-model="accepted"
+              :rules="[rules.checked]"
+            />
+            <span>
+              J'ai lu et accepté le règlement de la LAN
+            </span>
+          </v-row>
           <v-btn
             depressed
             block
             large
             color="primary"
             :loading="loading"
-            :disabled="loading"
+            :disabled="loading || !valid || !accepted"
             @click="register"
           >
             INSCRIPTION
@@ -128,6 +141,7 @@ export default {
   middleware: 'notconnected',
   data () {
     return {
+      valid: false,
       loading: false,
       snackbar: false,
       username: '',
@@ -136,9 +150,11 @@ export default {
       email: '',
       password: '',
       passwordConfirmation: '',
+      accepted: false,
       phone: '',
       rules: {
         required: value => !!value || 'Requis.',
+        checked: value => value === true || 'Acceptez le règlement.',
         email: (value) => {
           const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
           return pattern.test(value) || 'Addresse email invalide.'
