@@ -30,14 +30,10 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
                 return AgentResponse::fail("unable to parse ip");
             }
 
-            let mut ip_vec = Vec::new();
-            ip_vec.push(PfrAddr::new_host(IpAddr::V4(Ipv4Addr::from(ip.unwrap()))));
-
             println!("[INFO] adding ip : {}", req.body);
-            let _ = PfTable::new("authorized_users").add_addrs(
-                &fs::OpenOptions::new().write(true).open("/dev/pf").unwrap(),
-                ip_vec,
-            );
+            _ = std::process::Command::new("pfctl")
+                .args(["-t", "authorized_users", "-T", "add", &req.body])
+                .output();
             AgentResponse::success()
         }
         "remove" => {
