@@ -1,8 +1,4 @@
-use std::net::IpAddr;
-use std::{fs, net::Ipv4Addr};
-
 use lpmng_mq::server::{AgentResponse, RouterRequest, Server};
-use pftables_rs::{PfTable, PfrAddr};
 use tokio;
 
 fn ip_to_u32(str: String) -> Option<u32> {
@@ -43,12 +39,9 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
                 return AgentResponse::fail("unable to parse ip");
             }
 
-            let mut ip_vec = Vec::new();
-            ip_vec.push(PfrAddr::new(IpAddr::V4(Ipv4Addr::from(ip.unwrap())), 0));
-
             println!("[INFO] removing ip : {}", req.body);
             _ = std::process::Command::new("pfctl")
-                .args(["-t", "authorized_users", "-T", "remove", &req.body])
+                .args(["-t", "authorized_users", "-T", "delete", &req.body])
                 .output();
 
             AgentResponse::success()
