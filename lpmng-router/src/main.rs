@@ -1,5 +1,5 @@
 use std::net::IpAddr;
-use std::{fs::File, net::Ipv4Addr};
+use std::{fs, net::Ipv4Addr};
 
 use lpmng_mq::server::{AgentResponse, RouterRequest, Server};
 use pftables_rs::{PfTable, PfrAddr};
@@ -34,8 +34,10 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
             ip_vec.push(PfrAddr::new(IpAddr::V4(Ipv4Addr::from(ip.unwrap())), 0));
 
             println!("[INFO] adding ip : {}", req.body);
-            let _ = PfTable::new("authorized_users")
-                .add_addrs(&File::open("/etc/authorized_users").unwrap(), ip_vec);
+            let _ = PfTable::new("authorized_users").add_addrs(
+                &fs::OpenOptions::new().write(true).open("/dev/pf").unwrap(),
+                ip_vec,
+            );
             AgentResponse::success()
         }
         "remove" => {
@@ -49,14 +51,16 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
             ip_vec.push(PfrAddr::new(IpAddr::V4(Ipv4Addr::from(ip.unwrap())), 0));
 
             println!("[INFO] removing ip : {}", req.body);
-            let _ = PfTable::new("authorized_users")
-                .del_addrs(&File::open("/etc/authorized_users").unwrap(), ip_vec);
+            let _ = PfTable::new("authorized_users").del_addrs(
+                &fs::OpenOptions::new().write(true).open("/dev/pf").unwrap(),
+                ip_vec,
+            );
             AgentResponse::success()
         }
         "get" => {
             println!("[INFO] getting ips");
             let ips = PfTable::new("authorized_users")
-                .get_addrs(&File::open("/etc/authorized_users").unwrap());
+                .get_addrs(&fs::OpenOptions::new().write(true).open("/dev/pf").unwrap());
 
             let body = ips
                 .unwrap()
@@ -72,7 +76,7 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
         "clear" => {
             println!("[INFO] clearing ips");
             let _ = PfTable::new("authorized_users")
-                .clr_addrs(&File::open("/etc/authorized_users").unwrap());
+                .clr_addrs(&fs::OpenOptions::new().write(true).open("/dev/pf").unwrap());
             AgentResponse::success()
         }
         _ => AgentResponse {
