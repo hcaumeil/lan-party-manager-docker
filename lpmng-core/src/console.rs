@@ -37,6 +37,7 @@ fn help() {
     println!("rget / router-get : get authorised ips");
     println!("dbc / db-connect : connect to the database");
     println!("dbu / db-users : get users from the database");
+    println!("saveme : reset the router and readd all session that have internet true");
     println!("banner : print banner");
     println!("");
 }
@@ -155,6 +156,52 @@ async fn db_get_users(handler: &mut ConsoleHandler) -> Result<(), String> {
     }
 }
 
+async fn saveme(mut handler: &mut ConsoleHandler) -> Result<(), String> {
+    if !handler.db_handler.is_some() {
+        return Err("Unable to connect to the database".to_owned());
+    }
+
+    if !handler.router.is_some() {
+        return Err("Unable to connect to the database".to_owned());
+    }
+
+    let mut sess: Vec<crate::models::Session> = handler
+        .db_handler
+        .as_mut()
+        .unwrap()
+        .get_sessions()
+        .await
+        .unwrap_or_default();
+
+    sess.retain(|s| s.internet);
+
+    _ = handler
+        .router
+        .as_mut()
+        .unwrap()
+        .send(RouterRequest {
+            action: "clear".to_owned(),
+            body: "".to_owned(),
+        })
+        .await;
+
+    for s in sess {
+        let r = router_ip_action(
+            &mut handler,
+            &[s.ip4.as_str()],
+            "add",
+            format!("ip {} added !", s.ip4.as_str()).as_str(),
+        )
+        .await;
+
+        if r.is_err() {
+            return r;
+        }
+    }
+
+    Ok(())
+}
+
 struct ConsoleHistory {
     max: usize,
     history: VecDeque<String>,
@@ -258,6 +305,7 @@ async fn _command_executor(cmd: &str, mut handler: &mut ConsoleHandler) -> Resul
             println!("{}", BANNER);
             Ok(())
         }
+        "saveme" => saveme(&mut handler).await,
         _ => Err("error: this command does not exist".to_owned()),
     }
 }
