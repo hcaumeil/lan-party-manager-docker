@@ -4,6 +4,7 @@ use std::{convert::Infallible, path::Path};
 use base64_url::{decode, encode, unescape};
 use biscuit_auth::PrivateKey;
 use chrono::Utc;
+use regex::Regex;
 use serde_json;
 use warp::{self, Filter, Rejection, Reply};
 
@@ -344,8 +345,30 @@ pub async fn user_post(
         return Err(warp::reject());
     }
 
+    let string_checker = |s: String| s.is_empty() || s.starts_with(" ");
+
+    let email_regex = Regex::new(
+        r"(?x)
+            ^(?P<login>[^@\s]+)@
+            ([[:word:]]+\.)*
+            [[:word:]]+$
+            ",
+    )
+    .unwrap();
+
     let mut object = user.clone();
-    object.password = hash(user.password);
+    object.password = hash(user.password.clone());
+    object.role = "user".to_string();
+    object.is_allowed = false;
+
+    if string_checker(user.lastname)
+        || string_checker(user.username)
+        || string_checker(user.password)
+        || string_checker(user.firstname)
+        || !email_regex.is_match(&user.email)
+    {
+        return Err(warp::reject());
+    }
 
     let res = match user.id {
         Some(_) => handler.db.update_user(object).await,

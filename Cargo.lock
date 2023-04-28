@@ -985,6 +985,7 @@ dependencies = [
  "dialoguer",
  "futures",
  "lpmng-mq",
+ "regex",
  "serde",
  "serde_json",
  "sha256",
