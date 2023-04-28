@@ -31,7 +31,7 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
             }
 
             let mut ip_vec = Vec::new();
-            ip_vec.push(PfrAddr::new(IpAddr::V4(Ipv4Addr::from(ip.unwrap())), 0));
+            ip_vec.push(PfrAddr::new_host(IpAddr::V4(Ipv4Addr::from(ip.unwrap()))));
 
             println!("[INFO] adding ip : {}", req.body);
             let _ = PfTable::new("authorized_users").add_addrs(
