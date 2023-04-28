@@ -52,7 +52,7 @@ export default {
   middleware: ['auth', 'bypass'],
   data () {
     return {
-      room: 'E...'
+      room: 'E214'
     }
   },
   methods: {
