@@ -61,7 +61,9 @@ export default {
           success: colors.green.accent3
         }
       }
-    }
+    },
+    defaultAssets: false,
+    treeShake: true
   },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
