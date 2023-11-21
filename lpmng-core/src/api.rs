@@ -407,7 +407,7 @@ pub async fn user_patch(
             };
             handler.db.update_user(new).await;
             if user.is_allowed == Some(false) {
-                match handler.db.get_session_by_user_id(user.id).await {
+                match handler.db.get_session_by_user_id(user.id.clone()).await {
                     None => {}
                     Some(session) => {
                         if session.internet {
@@ -425,6 +425,35 @@ pub async fn user_patch(
                                     ip4: session.ip4,
                                     user_id: session.user_id,
                                     internet: false,
+                                    date_time: Utc::now().naive_utc(),
+                                })
+                                .await
+                            {
+                                return Err(warp::reject());
+                            }
+                        }
+                    }
+                }
+            }
+            if user.is_allowed == Some(true) {
+                match handler.db.get_session_by_user_id(user.id).await {
+                    None => {}
+                    Some(session) => {
+                        if !session.internet {
+                            handler
+                                .router
+                                .send(RouterRequest {
+                                    action: "add".to_string(),
+                                    body: session.ip4.clone(),
+                                })
+                                .await;
+                            if !handler
+                                .db
+                                .update_session(Session {
+                                    id: session.id,
+                                    ip4: session.ip4,
+                                    user_id: session.user_id,
+                                    internet: true,
                                     date_time: Utc::now().naive_utc(),
                                 })
                                 .await
