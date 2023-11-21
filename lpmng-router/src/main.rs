@@ -1,3 +1,5 @@
+use std::process::Stdio;
+
 use lpmng_mq::server::{AgentResponse, RouterRequest, Server};
 use tokio;
 
@@ -27,8 +29,8 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
             }
 
             println!("[INFO] adding ip : {}", req.body);
-            _ = std::process::Command::new("pfctl")
-                .args(["-t", "authorized_users", "-T", "add", &req.body])
+            _ = std::process::Command::new("iptables")
+                .args(["-A", "LPMNG", "-s", &req.body, "-i", "eth1", "-j", "ACCEPT"])
                 .output();
             AgentResponse::success()
         }
@@ -40,8 +42,8 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
             }
 
             println!("[INFO] removing ip : {}", req.body);
-            _ = std::process::Command::new("pfctl")
-                .args(["-t", "authorized_users", "-T", "delete", &req.body])
+            _ = std::process::Command::new("iptables")
+                .args(["-D", "LPMNG", "-s", &req.body, "-i", "eth1", "-j", "ACCEPT"])
                 .output();
 
             AgentResponse::success()
@@ -49,17 +51,24 @@ fn server_handler(req: RouterRequest) -> AgentResponse {
         "get" => {
             println!("[INFO] getting ips");
 
-            let ips = std::process::Command::new("pfctl")
-                .args(["-t", "authorized_users", "-T", "show"])
-                .output();
+            let ips = std::process::Command::new("iptables")
+                .args(["-L", "LPMNG", "-vn"])
+                .stdout(Stdio::piped())
+                .spawn();
 
             if ips.is_err() {
                 return AgentResponse::fail("no output");
             }
 
-            match ips {
-                Ok(ips) => {
-                    let body = String::from_utf8_lossy(&ips.stdout).to_string();
+            let ips = ips.unwrap();
+            let res = std::process::Command::new("grep")
+                .args(["-oh", "10.82.\\w*.\\w*"])
+                .stdin(ips.stdout.unwrap())
+                .output();
+
+            match res {
+                Ok(r) => {
+                    let body = String::from_utf8_lossy(&r.stdout).to_string();
 
                     AgentResponse {
                         success: true,
