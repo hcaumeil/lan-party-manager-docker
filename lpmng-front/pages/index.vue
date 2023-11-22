@@ -2,13 +2,18 @@
   <v-card
     class="pa-2 rounded-lg"
     max-width="800"
-    min-width="320"
+    min-width="760"
     width="40vw"
     style="backdrop-filter: blur(30px); background-color: #1e1e1eaa"
   >
     <v-card-title>Bravo {{ identity }} !</v-card-title>
     <v-container>
       <p>Vous avez accès à internet.</p>
+      <div style="display: flex; justify-content: center">
+        <video width="640" height="480" autoplay loop>
+          <source src="~/assets/internet.mp4" type="video/mp4">
+        </video>
+      </div>
     </v-container>
     <v-card-actions>
       <v-btn
@@ -41,8 +46,13 @@ export default {
     }
   },
   async created () {
-    const me = await this.$store.getters['api/user']()
-    this.identity = `${me.firstname} ${me.lastname}`
+    try {
+      const me = await this.$store.getters['api/user']()
+      this.identity = `${me.firstname} ${me.lastname}`
+    } catch (e) {
+      localStorage.clear()
+      location.reload()
+    }
   },
   methods: {
     async logout () {
