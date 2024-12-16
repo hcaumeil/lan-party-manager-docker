@@ -1,0 +1,60 @@
+services:
+  pg:
+    image: 'postgres:latest'
+    environment:
+      POSTGRES_USER: corpau
+      POSTGRES_PASSWORD: corpau
+      POSTGRES_DB: lpmng
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - 5432:5432
+    volumes:
+      - /tmp/db-data/:/var/lib/postgresql/data/
+      - ${PWD}/lpmng-core/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      mynet:
+        ipv4_address: 10.82.0.3    
+  lmpng-router:
+    cap_add:
+      - ALL
+      - NET_ADMIN
+    build:
+       dockerfile: ./Dockerfile-lpmng-router
+    ports:
+      - 2004:2004
+    networks:
+      mynet:
+        ipv4_address: 10.82.0.2
+  lmpng-core:
+    cap_add:
+      - ALL
+      - NET_ADMIN
+    build:
+       dockerfile: ./Dockerfile-lpmng-core
+    expose:
+      - 8000
+    ports:
+      - 8000:8000
+    networks:
+      mynet:
+        ipv4_address: 10.82.0.4
+  test:
+    cap_add:
+      - ALL
+    build:
+       dockerfile: ./Dockerfile-test
+    ports:
+      - 7000:7000
+    networks:
+      mynet:
+        ipv4_address: 10.82.0.69
+
+networks:
+  mynet:
+    driver: bridge
+    external: true
+    ipam:
+      driver: default
+      config:
+        - subnet: "10.82.0.0/24"
+        - gateway: 10.82.0.1

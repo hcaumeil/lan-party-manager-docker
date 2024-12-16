@@ -1,0 +1,14 @@
+FROM alpine:3.20
+RUN mkdir /app
+COPY ./lpmng-mq /app/lpmng-mq
+COPY ./lpmng-router /app/lpmng-router
+RUN apk add --no-cache rust
+RUN apk add --no-cache cargo
+RUN apk add --no-cache protobuf
+RUN cd /app/lpmng-router && cargo b --release && mv /app/lpmng-router/target/release/lpmng-router /bin/. && rm -fr /app
+RUN apk del cargo
+RUN apk del rust
+RUN apk add iptables
+ENV ROUTER_ADDRESS="0.0.0.0:2024"
+COPY router.sh /
+CMD /router.sh

@@ -1,0 +1,22 @@
+FROM archlinux:latest
+RUN mkdir /app
+COPY ./lpmng-front /app/lpmng-front
+COPY ./lpmng-mq /app/lpmng-mq
+COPY ./lpmng-core /app/lpmng-core
+ENV NODE_OPTIONS=--openssl-legacy-provider
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+RUN yes | pacman -Sy
+RUN yes | pacman -S npm
+RUN yes | pacman -S postgresql
+RUN yes | pacman -S yarn
+RUN yes | pacman -S protobuf
+RUN yes | pacman -S openssl
+RUN mkdir -p /bin/public
+RUN cd /app/lpmng-front && yarn install && yarn run nuxt generate && cp -r dist/* /bin/public
+# RUN pacman -S rust
+RUN yes | pacman -S gcc
+RUN yes | pacman -S pkg-config 
+RUN cd /app/lpmng-core && source ${HOME}/.cargo/env && cargo b --release && mv /app/lpmng-core/target/release/lpmng-core /bin/. && rm -fr /app
+COPY ./lpmng-core/migrations/init.sql /bin/init.sql
+COPY ./core.sh /core.sh
+CMD /core.sh

@@ -1,0 +1,5 @@
+FROM archlinux:latest
+COPY test.sh /
+RUN yes | pacman -Sy 
+RUN yes | pacman -S jq 
+CMD /test.sh

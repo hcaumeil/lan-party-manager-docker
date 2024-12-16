@@ -1,0 +1,27 @@
+# lpmng
+
+this project emulate a lan party network with docker.
+this is compose of :
+- a test machine 
+- a postgresql database
+- an all in one api/frontend 
+- a router that recieve message from the api
+
+## deploy
+
+before running anything,
+you might need to run :
+
+mkdir -p /tmp/db-data
+docker network create --gateway 10.82.0.1 --subnet 10.82.0.0/24 mynet
+
+then run :
+docker compose up -d
+
+and go to : http://10.82.0.4
+
+admin account is :
+username : admin
+password : toto
+
+you should see the user created by the test machine
